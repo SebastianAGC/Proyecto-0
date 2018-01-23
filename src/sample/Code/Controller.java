@@ -4,43 +4,114 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.AnchorPane;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.TokenStream;
+import javafx.stage.FileChooser;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.atn.ATNConfigSet;
+import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.gui.TreeViewer;
+
+import javax.print.attribute.standard.DialogTypeSelection;
+import java.io.File;
+import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.stage.StageStyle;
+
+import java.awt.*;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.*;
+import java.io.*;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+
+import javafx.scene.layout.VBox;
+
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 //import org.antlr.v4.runtime.tree.gui.TreeViewer;
 
 
 public class Controller {
 
-
+    @FXML private TabPane tabPane;
     @FXML private TextArea eltext;
     @FXML private TreeView<String> treeView;
     @FXML private AnchorPane thePane;
     String program = "";
+
+    public void cargarGramatica(){
+        FileChooser fileChooser = new FileChooser();
+        // Set extension filter
+        FileChooser.ExtensionFilter extFilter =
+                new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
+        fileChooser.getExtensionFilters().add(extFilter);
+
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt"));
+        fileChooser.setTitle("Open Grammar File");
+        File selectedFile = fileChooser.showOpenDialog(null);
+        if(selectedFile!=null){
+            selectedFile.getAbsoluteFile();
+            eltext.setText(readFile(selectedFile));
+        }
+
+    }
 
     public void compilarButtonClicked() {
         //String[] arg0 = { "-visitor", "S:\\Documents\\Grammar\\Hello.g4", "-package", "sample" };
         //org.antlr.v4.Tool.main(arg0);
         program = eltext.getText();
         compile(program);
+        tabPane.getSelectionModel().selectNext();
 
     }
 
-    public void compile(String expression) {
+    private String readFile(File file){
+        StringBuilder stringBuffer = new StringBuilder();
+        BufferedReader bufferedReader = null;
+        String cadena="";
+        try {
 
-        //final LexerGrammar lg = (LexerGrammar) Grammar.load(HelloLexer);
-        //final Grammar pg = Grammar.load(HelloParser, lg);
-        //ANTLRStringStream input = new ANTLRStringStream(expression); // a character stream
-        //HelloLexer lex = new HelloLexer((CharStream) input); // transforms characters into tokens
-        //CommonTokenStream tokens = new CommonTokenStream((TokenSource) lex); // a token stream
-        //HelloParser parser = new HelloParser((TokenStream) tokens); // transforms tokens into parse trees
-        //ParserRuleContext<tokens> tree = parser.compilationUnit(); // parse
-        //ParseTree t = parser.your_first_rule_name(); // creates the parse tree from the called rule
-        //System.out.println("parse tree: " + t.toStringTree(parser));
+            bufferedReader = new BufferedReader(new FileReader(file));
+            bufferedReader.toString();
+            String text;
+
+            while ((text = bufferedReader.readLine()) != null) {
+                stringBuffer.append(text);
+                cadena+=text+"\n";
+            }
+
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                bufferedReader.close();
+            } catch (IOException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return cadena;
+    }
+
+    public void compile(String expression) {
 
         CharStream stream = new ANTLRInputStream(expression);
         calculatorLexer lexer  = new calculatorLexer(stream);
@@ -53,17 +124,81 @@ public class Controller {
 
         //Show in GUI
         String raiz = tree.toStringTree(parser);
-        String[] r = raiz.split(" ");
-        r[0]=r[0].replace("(", "");
-        TreeItem<String> root = new TreeItem<>(r[0]);
-        ;
-        //for (int i=0;i<tree.getChildCount();i++) {
-           // TreeItem<String> child = new TreeItem<>(tree.getChild(i).getText());
+        treeView.setRoot(generatingRoot(raiz));
+        TreeViewer viewer = new TreeViewer(Arrays.asList(parser.getRuleNames()), tree);
+        viewer.setBorderColor(Color.WHITE);
+        viewer.setBoxColor(Color.WHITE);
+        //viewer.save("tree.jpg");
 
-            //root.getChildren().add(child);
-        //}
-        treeView.setRoot(treeGenerator(tree, root));
+
     }
+
+    public TreeItem<String> generatingRoot(String tree){
+        //tree = tree.replace("equation", "");
+        tree = tree.substring(1,tree.length()-1);
+        TreeItem<String> root = new TreeItem<>("ARBOL SINTACTICO");
+        TreeItem<String> mainChild = readTree(tree, root);
+        //root.getChildren().add(mainChild);
+        return mainChild;
+    }
+
+    public TreeItem<String> readTree(String tree, TreeItem<String> root){
+        TreeItem<String> child = new TreeItem<>();
+        String evaluatedChar;
+        String childContent = "";
+        int contAbierto=0;
+        int contCerrado=0;
+        int indicador=0;
+        int j=0;
+        for(int i=0;i<tree.length();i++){
+            evaluatedChar = String.valueOf(tree.charAt(i));
+            if(evaluatedChar.equals("(")){
+                //hacer si se abre nuevas llaves
+                contAbierto++;
+                j=i;
+                while(contAbierto!=contCerrado){
+                    j++;
+                    evaluatedChar = String.valueOf(tree.charAt(j));
+                    if(evaluatedChar.equals(")")){
+                        contCerrado++;
+                        indicador=j;
+                    }else
+                    if(evaluatedChar.equals("(")){
+                        contAbierto++;
+                    }else if(!evaluatedChar.equals(" ")){
+
+                    }
+
+                }
+
+                child = readTree(tree.substring(i+1, indicador), child);
+                i=indicador;
+                //root.getChildren().add(child);
+                contAbierto=0;
+                contCerrado=0;
+            }else if(evaluatedChar.equals(")")){
+                //hacer si se cierra.
+                child = new TreeItem<>(childContent);
+                root.getChildren().add(child);
+                childContent="";
+            }else if(evaluatedChar.equals(" ")){
+                //hacer si vacio
+                if(!String.valueOf(tree.charAt(i+1)).equals(")")){
+                    child = new TreeItem<>(childContent);
+                    root.getChildren().add(child);
+                    childContent="";
+                }
+            }else{
+                childContent+=evaluatedChar;
+                if(i==tree.length()-1){
+                    child = new TreeItem<>(childContent);
+                    root.getChildren().add(child);
+                }
+             }
+        }
+        return root;
+    }
+
 
     public TreeItem<String> treeGenerator(ParseTree t, TreeItem<String> root){
         for (int i=0;i<t.getChildCount();i++) {
