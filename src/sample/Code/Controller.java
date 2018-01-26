@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.gui.TreeViewer;
 
+import javax.print.PrintException;
 import javax.print.attribute.standard.DialogTypeSelection;
 import java.io.File;
 import javafx.scene.control.*;
@@ -52,7 +53,7 @@ public class Controller {
     @FXML private TabPane tabPane;
     @FXML private TextArea eltext;
     @FXML private TreeView<String> treeView;
-    @FXML private AnchorPane thePane;
+    @FXML public TextArea errorsText;
     String program = "";
 
     public void cargarGramatica(){
@@ -75,6 +76,7 @@ public class Controller {
     public void compilarButtonClicked() {
         //String[] arg0 = { "-visitor", "S:\\Documents\\Grammar\\Hello.g4", "-package", "sample" };
         //org.antlr.v4.Tool.main(arg0);
+        errorsText.setText("");
         program = eltext.getText();
         compile(program);
         tabPane.getSelectionModel().selectNext();
@@ -113,31 +115,55 @@ public class Controller {
 
     public void compile(String expression) {
 
-        CharStream stream = new ANTLRInputStream(expression);
-        calculatorLexer lexer  = new calculatorLexer(stream);
-        TokenStream tokenStream = new CommonTokenStream(lexer);
-        calculatorParser parser = new calculatorParser(tokenStream);
-        ParseTree tree = parser.equation();
+        try{
 
-        //show AST in console
-        System.out.println(tree.toStringTree(parser));
+            errorsText.setText("");
+            CharStream stream = CharStreams.fromString(expression);
+            ProgramLexer lexer  = new ProgramLexer(stream);
+            lexer.removeErrorListeners();
+            lexer.addErrorListener(ThrowingErrorListener.INSTANCE);
 
-        //Show in GUI
-        String raiz = tree.toStringTree(parser);
-        treeView.setRoot(generatingRoot(raiz));
+            TokenStream tokenStream = new CommonTokenStream(lexer);
+            ProgramParser parser = new ProgramParser(tokenStream);
+            parser.removeErrorListeners();
+            parser.addErrorListener(ThrowingErrorListener.INSTANCE);
+            ParseTree tree = parser.program();
+
+            //show AST in console
+            System.out.println(tree.toStringTree(parser));
+
+            //Show in GUI
+            String raiz = tree.toStringTree(parser);
+
+            //treeView.setRoot(generatingRoot(raiz));
+            treeView.setRoot(generatingRoot(raiz, tree));
+            errorsText.setText(raiz);
+
+        }catch(Exception e){
+            String m = e.toString();
+            errorsText.setText(m);
+        }
+
+
+        /*
         TreeViewer viewer = new TreeViewer(Arrays.asList(parser.getRuleNames()), tree);
         viewer.setBorderColor(Color.WHITE);
         viewer.setBoxColor(Color.WHITE);
-        //viewer.save("tree.jpg");
+        try {
+            viewer.save("tree.jpg");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (PrintException e) {
+            e.printStackTrace();
+        }*/
 
 
     }
 
-    public TreeItem<String> generatingRoot(String tree){
-        //tree = tree.replace("equation", "");
-        tree = tree.substring(1,tree.length()-1);
+    public TreeItem<String> generatingRoot(String tree, ParseTree treeP){
         TreeItem<String> root = new TreeItem<>("ARBOL SINTACTICO");
-        TreeItem<String> mainChild = readTree(tree, root);
+        //TreeItem<String> mainChild = readTree(tree, root);
+        TreeItem<String> mainChild = treeGenerator(treeP, root);
         //root.getChildren().add(mainChild);
         return mainChild;
     }
@@ -176,6 +202,7 @@ public class Controller {
                 //root.getChildren().add(child);
                 contAbierto=0;
                 contCerrado=0;
+
             }else if(evaluatedChar.equals(")")){
                 //hacer si se cierra.
                 child = new TreeItem<>(childContent);
@@ -188,6 +215,8 @@ public class Controller {
                     root.getChildren().add(child);
                     childContent="";
                 }
+
+                root.getChildren().add(readTree(tree.substring(i+1), child));
             }else{
                 childContent+=evaluatedChar;
                 if(i==tree.length()-1){
@@ -196,9 +225,9 @@ public class Controller {
                 }
              }
         }
+
         return root;
     }
-
 
     public TreeItem<String> treeGenerator(ParseTree t, TreeItem<String> root){
         for (int i=0;i<t.getChildCount();i++) {
@@ -212,6 +241,26 @@ public class Controller {
         }
         return root;
     }
+/*
+    public class errorListener extends BaseErrorListener {
+        String cadena;
+        public void syntaxError(Recognizer<?, ?> recognizer,
+                                Object offendingSymbol,
+                                int line, int charPositionInLine,
+                                String msg,
+                                RecognitionException e)
+        {
+            List<String> stack = ((Parser)recognizer).getRuleInvocationStack();
+            Collections.reverse(stack);
+            cadena+="rule stack: "+stack + "\n";
+            cadena+="line "+line+":"+charPositionInLine+" at "+
+                    offendingSymbol+": "+msg + "\n";
+            //System.err.println("rule stack: "+stack);
+            //System.err.println("line "+line+":"+charPositionInLine+" at "+
+             //       offendingSymbol+": "+msg);
+            errorsText.setText(cadena);
+        }
+    }*/
 
 
 }
