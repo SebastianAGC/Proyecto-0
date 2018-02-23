@@ -55,7 +55,7 @@ varType
 	;
 
 methodDeclaration
-	:	methodType ID '('  (parameter (',' parameter)*) ')' block
+	:	methodType ID '('  (parameter (',' parameter)* |) ')' block
 	;
 
 	
