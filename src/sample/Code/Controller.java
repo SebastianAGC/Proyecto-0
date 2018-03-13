@@ -130,6 +130,8 @@ public class Controller {
             parser.addErrorListener(ThrowingErrorListener.INSTANCE);
             ParseTree tree = parser.program();
 
+            //EvalVisitor eval = new EvalVisitor();
+            //eval.visit(tree);
             //show AST in console
             System.out.println(tree.toStringTree(parser));
 

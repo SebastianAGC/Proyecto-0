@@ -1,223 +1,222 @@
 grammar Program;
 
-STRUCT :  'struct' ;
-TRUE :    'true' ;
-FALSE :   'false' ;
-VOID :    'void' ;
-IF :      'if' ;
-ELSE :    'else' ;
-WHILE :   'while' ;
-RETURN :  'return' ;
-INT :     'int' ;
-CHAR :    'char' ;
-BOOLEAN : 'boolean' ;
+STRUCT :  'struct' ;    #struct
+TRUE :    'true' ;      #true
+FALSE :   'false' ;     #false
+VOID :    'void' ;      #void
+IF :      'if' ;        #if
+ELSE :    'else' ;      #else
+WHILE :   'while' ;     #while
+RETURN :  'return' ;    #return
+INT :     'int' ;       #int
+CHAR :    'char' ;      #char
+BOOLEAN : 'boolean' ;   #boolean
 
-fragment LETTER : ('a'..'z'|'A'..'Z') ;
-fragment DIGIT :'0'..'9' ;
+fragment LETTER : ('a'..'z'|'A'..'Z') ;     #letter
+fragment DIGIT :'0'..'9' ;                  #digit
 
 
-ID : LETTER ( LETTER | DIGIT )* ;
-NUM : DIGIT ( DIGIT )* ;
-Char : LETTER;
+ID : LETTER ( LETTER | DIGIT )* ;   #id
+NUM : DIGIT ( DIGIT )* ;            #num
+Char : LETTER;                      #char_letter
 
 
 WS : 
-    [\t\r\n\f ]+ -> skip
+    [\t\r\n\f ]+ -> skip                #ws
     ;
 
 
 program
-	: 'class' ID '{' (declaration)* '}'
+	: 'class' ID '{' (declaration)* '}'     #program
 	;
 
 declaration
-	:	structDeclaration	
-	|	varDeclaration		
-	|	methodDeclaration	
+	:	structDeclaration	    #structDeclaration
+	|	varDeclaration		    #varDeclaration
+	|	methodDeclaration	    #methodDeclaration
 	;
 varDeclaration
-	: 	varType ID ';'
-	| 	varType ID '[' NUM ']' ';'  
+	: 	varType ID ';'                  #varDecl_ID
+	| 	varType ID '[' NUM ']' ';'      #varDecl_IDarray
 	;
 
 
 structDeclaration
-	:	STRUCT ID '{' (varDeclaration)* '}'
+	:	STRUCT ID '{' (varDeclaration)* '}'     #structDeclaration
 	;
 
 varType                                         
-	: 	INT				
-	|	CHAR				
-	|	BOOLEAN				
-	|	STRUCT ID			
-	|	structDeclaration              
-	| 	VOID				
+	: 	INT				            #var_int
+	|	CHAR				        #var_char
+	|	BOOLEAN				        #var_boolean
+	|	STRUCT ID			        #var_structID
+	|	structDeclaration           #var_structDecl
+	| 	VOID				        #var_void
 	;
 
 methodDeclaration
-	:	methodType ID '('  (parameter (',' parameter)* |) ')' block
+	:	methodType ID '(' parameter | (parameter (',' parameter)*) ')' block     #methodDeclaration
 	;
 
 	
 methodType
-	:	INT				
-	|	CHAR				
-	|	BOOLEAN				
-	|	VOID				
+	:	INT                 #method_int
+	|	CHAR				#method_char
+	|	BOOLEAN				#method_boolean
+	|	VOID				#method_void
 	;
 
 parameter
-	: 	parameterType ID		
-	|	parameterType ID '['']'
+	: 	parameterType ID		    #param_ID
+	|	parameterType ID '['']'     #param_ID_dots
 	;
 	
 parameterType
-	:	INT				
-	|	CHAR				
-	|	BOOLEAN				
+	:	INT				    #param_int
+	|	CHAR				#param_char
+	|	BOOLEAN				#param_boolean
 	;
 	
 
 block
-	:	'{' (varDeclaration)*(statement)* '}'
+	:	'{' (varDeclaration)*(statement)* '}'       #block
 	;
 
 statement
-	:	'if' '(' expression ')' block (statementElse)?	
-	|	WHILE '(' expression ')' block			
-	|	'return' ( expression )? ';'			
-	|	methodCall ';'					
-	| 	block										
-	|	location '=' expression ';'			
-    |   locationArray '=' expression ';'               
-	|	(expression)';'				
+	:	'if' '(' expression ')' block (statementElse)?	#stmt_if
+	|	WHILE '(' expression ')' block			        #stmt_while
+	|	'return' ( expression )? ';'			        #stmt_return
+	|	methodCall ';'					                #stmt_methodCall
+	| 	block										    #stmt_block
+	|	location '=' expression ';'			            #stmt_location
+    |   locationArray '=' expression ';'                #stmt_locationArray
+	|	(expression)';'				                    #stmt_expression
 	;
 
 statementElse
-    :	ELSE block
+    :	ELSE block      #stmtElse
     ;
 	
 location
-	:	(ID)('.' locationMember)?
+	:	(ID)('.' locationMember)?       #location
 	;
 	
 locationMember
-	:	(ID)('.' locationMember)?    
-    |   locationArray                
+	:	(ID)('.' locationMember)?    #locationMember_ID
+    |   locationArray                #locationMember_locArray
 	;
 
 locationArray
-        :   ID '[' expression ']' ('.' locationMember)?
+        :   ID '[' expression ']' ('.' locationMember)? #locationArray
             
         ;
 locationArray2
-        :   ID '[' expression ']' ('.' locationMember)?
+        :   ID '[' expression ']' ('.' locationMember)? #locationArray2
             
         ;
 
 locationMethod
-    : '.' locationMember
+    : '.' locationMember        #locationMethod
     ;    
 
 expression 
-	:	andExpr				
-	| 	expression cond_op andExpr  	
+	:	andExpr				            #exp_andExpr
+	| 	expression cond_op andExpr  	#exp_condOp
 	;
 
 andExpr
-	: 	eqExpr				 
-	| 	andExpr cond_op eqExpr 	
+	: 	eqExpr				            #and_eqExpr
+	| 	andExpr cond_op eqExpr 	        #and_condOp
 	;
 
 eqExpr
-	: 	relationExpr 			
-	| 	eqExpr eq_op relationExpr 	
+	: 	relationExpr 			        #eqExpr_relationExpr
+	| 	eqExpr eq_op relationExpr 	    #eqExpr_eqOp
 	;
 
 relationExpr
-	: 	addExpr 			
-	| 	relationExpr rel_op addExpr 	
+	: 	addExpr 			            #relExpr_addExpr
+	| 	relationExpr rel_op addExpr 	#relExpr_relOp
 	;
 
 addExpr
-	: 	multExpr 			
-	| 	addExpr arith_op multExpr 	
+	: 	multExpr 			            #addExpr_multExpr
+	| 	addExpr arith_op multExpr 	    #addExpr_arithOp
 	;
 
 multExpr
-	: 	unaryExpr 			
-	| 	multExpr arith_op unaryExpr 
+	: 	unaryExpr 			            #multExpr_unaryExpr
+	| 	multExpr arith_op unaryExpr     #multExpr_arithOp
 	;
 
 
 unaryExpr
-	:  	'('(INT|CHAR)')'  value		
-	| 	'-' value 			
-	|	'!' value 			
-	|	value   	   
+	:  	'('(INT|CHAR)')'  value		#unaryExpr_intchar
+	| 	'-' value 			        #unaryExpr_minus
+	|	'!' value 			        #unaryExpr_diff
+	|	value   	                #unaryExpr_value
 	;
 
 value
-	:	location		
-    |   locationArray2                   
-	|	methodCall	
-	|	literal
-	|	'(' expression ')'
+	:	location		            #value_location
+    |   locationArray2              #value_locationArray2
+	|	methodCall                  #value_methodCall
+	|	literal                     #value_literal
+	|	'(' expression ')'          #value_expr
 	;
 
 
 	
 methodCall
-	:	ID '(' (arg (',' arg)*)? ')' 
+	:	ID '(' (arg (',' arg)*)? ')' #methodCall
 	;
 	
 arg
-	:	expression
+	:	expression          #arg
 	;
 
 arith_op
-	:	'+'
-	| 	'-'
-	|	'*'
-	|	'/'
-	|	'%'
-	|	'%'
+	:	'+'                 #ao_plus
+	| 	'-'                 #ao_minus
+	|	'*'                 #ao_mult
+	|	'/'                 #ao_div
+	|	'%'                 #ao_mod
 	;
 
 	
 rel_op
-	:	'<'
-	|	'>'
-	| 	'<='
-	|	'>='
+	:	'<'                 #relop_lower
+	|	'>'                 #relop_greater
+	| 	'<='                #relop_lowerEq
+	|	'>='                #relop_greaterEq
 	;
 	
 eq_op
-	:	'=='
-	|	'!='
+	:	'=='            #eqop_eq
+	|	'!='            #eqop_diff
 	;
 	
 cond_op
-	: '||' 
-	| '&&'
+	: '||'              #condop_or
+	| '&&'              #condop_and
 	;
 
 
 literal
-	:	int_literal
-	|	char_literal
-	|	boolean_literal
+	:	int_literal             #literal_int
+	|	char_literal            #literal_char
+	|	boolean_literal         #literal_bool
 	;
 	
 int_literal
-	:	NUM
+	:	NUM                     #int_literal
 	;
 
 char_literal
-	:	Char 
+	:	Char                    #char_literal
 	;
 	
 boolean_literal
-	:	'true'
-	|	'false'
+	:	'true'                  #bool_true
+	|	'false'                 #bool_false
 	;
