@@ -1,5 +1,7 @@
 package sample.Code;
 
+import java.util.Objects;
+
 public class Simbolo {
     String nombre;
     String tipo;
@@ -43,5 +45,19 @@ public class Simbolo {
 
     public void setFirma(String firma) {
         this.firma = firma;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Simbolo)) return false;
+        Simbolo simbolo = (Simbolo) o;
+        return Objects.equals(getNombre(), simbolo.getNombre());
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(getNombre());
     }
 }

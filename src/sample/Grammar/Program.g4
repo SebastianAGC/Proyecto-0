@@ -1,39 +1,39 @@
 grammar Program;
 
-STRUCT :  'struct' ;    #struct
-TRUE :    'true' ;      #true
-FALSE :   'false' ;     #false
-VOID :    'void' ;      #void
-IF :      'if' ;        #if
-ELSE :    'else' ;      #else
-WHILE :   'while' ;     #while
-RETURN :  'return' ;    #return
-INT :     'int' ;       #int
-CHAR :    'char' ;      #char
-BOOLEAN : 'boolean' ;   #boolean
+STRUCT :  'struct' ;
+TRUE :    'true' ;
+FALSE :   'false' ;
+VOID :    'void' ;
+IF :      'if' ;
+ELSE :    'else' ;
+WHILE :   'while' ;
+RETURN :  'return' ;
+INT :     'int' ;
+CHAR :    'char' ;
+BOOLEAN : 'boolean' ;
 
-fragment LETTER : ('a'..'z'|'A'..'Z') ;     #letter
-fragment DIGIT :'0'..'9' ;                  #digit
+fragment LETTER : ('a'..'z'|'A'..'Z') ;
+fragment DIGIT :'0'..'9' ;
 
 
-ID : LETTER ( LETTER | DIGIT )* ;   #id
-NUM : DIGIT ( DIGIT )* ;            #num
-Char : LETTER;                      #char_letter
+ID : LETTER ( LETTER | DIGIT )* ;
+NUM : DIGIT ( DIGIT )* ;
+Char : LETTER;
 
 
 WS : 
-    [\t\r\n\f ]+ -> skip                #ws
+    [\t\r\n\f ]+ -> skip
     ;
 
 
 program
-	: 'class' ID '{' (declaration)* '}'     #program
+	: 'class' ID '{' (declaration)* '}'     #classDecl
 	;
 
 declaration
-	:	structDeclaration	    #structDeclaration
-	|	varDeclaration		    #varDeclaration
-	|	methodDeclaration	    #methodDeclaration
+	:	structDeclaration	    #decl_structDeclaration
+	|	varDeclaration		    #decl_varDeclaration
+	|	methodDeclaration	    #decl_methodDeclaration
 	;
 varDeclaration
 	: 	varType ID ';'                  #varDecl_ID
@@ -42,7 +42,7 @@ varDeclaration
 
 
 structDeclaration
-	:	STRUCT ID '{' (varDeclaration)* '}'     #structDeclaration
+	:	STRUCT ID '{' (varDeclaration)* '}'     #structDecl
 	;
 
 varType                                         
@@ -55,7 +55,7 @@ varType
 	;
 
 methodDeclaration
-	:	methodType ID '(' parameter | (parameter (',' parameter)*) ')' block     #methodDeclaration
+	:	methodType ID '(' (parameter | (parameter (',' parameter)*)) ')' block     #methodDecl
 	;
 
 	
@@ -79,7 +79,7 @@ parameterType
 	
 
 block
-	:	'{' (varDeclaration)*(statement)* '}'       #block
+	:	'{' (varDeclaration)*(statement)* '}'       #blck
 	;
 
 statement
@@ -98,7 +98,7 @@ statementElse
     ;
 	
 location
-	:	(ID)('.' locationMember)?       #location
+	:	(ID)('.' locationMember)?       #location_id
 	;
 	
 locationMember
@@ -107,16 +107,16 @@ locationMember
 	;
 
 locationArray
-        :   ID '[' expression ']' ('.' locationMember)? #locationArray
+        :   ID '[' expression ']' ('.' locationMember)? #locationA
             
         ;
 locationArray2
-        :   ID '[' expression ']' ('.' locationMember)? #locationArray2
+        :   ID '[' expression ']' ('.' locationMember)? #locationA2
             
         ;
 
 locationMethod
-    : '.' locationMember        #locationMethod
+    : '.' locationMember        #locMethod
     ;    
 
 expression 
@@ -168,11 +168,11 @@ value
 
 	
 methodCall
-	:	ID '(' (arg (',' arg)*)? ')' #methodCall
+	:	ID '(' (arg (',' arg)*)? ')' #callingMethod
 	;
 	
 arg
-	:	expression          #arg
+	:	expression          #args
 	;
 
 arith_op
@@ -209,11 +209,11 @@ literal
 	;
 	
 int_literal
-	:	NUM                     #int_literal
+	:	NUM                     #integers
 	;
 
 char_literal
-	:	Char                    #char_literal
+	:	Char                    #chars
 	;
 	
 boolean_literal

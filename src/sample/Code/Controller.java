@@ -45,9 +45,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-//import org.antlr.v4.runtime.tree.gui.TreeViewer;
-
-
 public class Controller {
 
     @FXML private TabPane tabPane;
@@ -130,8 +127,8 @@ public class Controller {
             parser.addErrorListener(ThrowingErrorListener.INSTANCE);
             ParseTree tree = parser.program();
 
-            //EvalVisitor eval = new EvalVisitor();
-            //eval.visit(tree);
+            EvalVisitor eval = new EvalVisitor();
+            eval.visit(tree);
             //show AST in console
             System.out.println(tree.toStringTree(parser));
 
@@ -244,26 +241,5 @@ public class Controller {
         }
         return root;
     }
-/*
-    public class errorListener extends BaseErrorListener {
-        String cadena;
-        public void syntaxError(Recognizer<?, ?> recognizer,
-                                Object offendingSymbol,
-                                int line, int charPositionInLine,
-                                String msg,
-                                RecognitionException e)
-        {
-            List<String> stack = ((Parser)recognizer).getRuleInvocationStack();
-            Collections.reverse(stack);
-            cadena+="rule stack: "+stack + "\n";
-            cadena+="line "+line+":"+charPositionInLine+" at "+
-                    offendingSymbol+": "+msg + "\n";
-            //System.err.println("rule stack: "+stack);
-            //System.err.println("line "+line+":"+charPositionInLine+" at "+
-             //       offendingSymbol+": "+msg);
-            errorsText.setText(cadena);
-        }
-    }*/
-
 
 }
