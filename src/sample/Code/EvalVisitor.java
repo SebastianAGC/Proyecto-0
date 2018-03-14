@@ -29,16 +29,16 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     //Metodo para verificar que una variable ya ha sido creada
     public String visitVarDecl_ID(ProgramParser.VarDecl_IDContext ctx){
         //Obteniendo el ultimo hashset del stack
-        if(ctx.parent.parent.getText().contains("class")){
-            String tipo =" de tipo " + ctx.varType().getText();
+        //if(ctx.parent.parent.getText().contains("class")){
+           /* String tipo =" de tipo " + ctx.varType().getText();
             String id = ctx.ID().getText();
             Simbolo s = new Simbolo(id, tipo, 0, null);
             if(globalStack.contains(s)){
                 error += "La variable  \"" + id + "\" ya ha sido creada en "+ scopeName.peek()+".\n";
             }else{
                 globalStack.add(s);
-            }
-        }else{
+            }*/
+        //}else{
             HashSet<Simbolo> hashSet = stack.pop();
             String tipo =" de tipo " + ctx.varType().getText();
             String id = ctx.ID().getText();
@@ -50,7 +50,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             }
             //Añadiendo la ultima hash set
             stack.push(hashSet);
-        }
+        //}
 
 
 
@@ -117,6 +117,8 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         stack.push(hashSet);
         HashSet<Simbolo> newHashSet = new HashSet<>();
         stack.push(newHashSet);
+        visitChildren(ctx);
+        stack.pop();
         return visitChildren(ctx);
     }
 
@@ -164,6 +166,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     }
 
     public void existeMain(){
+        JOptionPane.showMessageDialog(null,stack.size());
         boolean existe = false;
         for (HashSet<Simbolo> h: stack) {
 
