@@ -129,15 +129,22 @@ public class Controller {
 
             EvalVisitor eval = new EvalVisitor();
             eval.visit(tree);
-            //show AST in console
-            System.out.println(tree.toStringTree(parser));
+            eval.existeMain();
 
-            //Show in GUI
-            String raiz = tree.toStringTree(parser);
+            if(eval.getError().equals("")){
+                //show AST in console
+                System.out.println(tree.toStringTree(parser));
 
-            //treeView.setRoot(generatingRoot(raiz));
-            treeView.setRoot(generatingRoot(raiz, tree));
-            errorsText.setText(raiz);
+                //Show in GUI
+                String raiz = tree.toStringTree(parser);
+
+                //treeView.setRoot(generatingRoot(raiz));
+                treeView.setRoot(generatingRoot(raiz, tree));
+                errorsText.setText(raiz);
+
+            }else{
+                errorsText.setText(eval.getError());
+            }
 
         }catch(Exception e){
             String m = e.toString();

@@ -1,5 +1,6 @@
 package sample.Code;// Generated from Program.g4 by ANTLR 4.7.1
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
+import sample.Code.ProgramParser;
 
 /**
  * This class provides an empty implementation of {@link ProgramVisitor},

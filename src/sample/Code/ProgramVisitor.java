@@ -1,5 +1,6 @@
 package sample.Code;// Generated from Program.g4 by ANTLR 4.7.1
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
+import sample.Code.ProgramParser;
 
 /**
  * This interface defines a complete generic visitor for a parse tree produced

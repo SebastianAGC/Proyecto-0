@@ -1,8 +1,9 @@
-package sample.Code;// Generated from Program.g4 by ANTLR 4.7.1
+// Generated from Program.g4 by ANTLR 4.7.1
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import sample.Code.ProgramParser;
 
 /**
  * This class provides an empty implementation of {@link ProgramListener},

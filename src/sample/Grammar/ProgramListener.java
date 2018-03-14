@@ -1,4 +1,4 @@
-package sample.Code;// Generated from Program.g4 by ANTLR 4.7.1
+// Generated from Program.g4 by ANTLR 4.7.1
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 import sample.Code.ProgramParser;
 
