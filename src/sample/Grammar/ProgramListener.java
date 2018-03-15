@@ -296,6 +296,18 @@ public interface ProgramListener extends ParseTreeListener {
 	 */
 	void exitBlck(ProgramParser.BlckContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code finblck}
+	 * labeled alternative in {@link ProgramParser#finbloque}.
+	 * @param ctx the parse tree
+	 */
+	void enterFinblck(ProgramParser.FinblckContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code finblck}
+	 * labeled alternative in {@link ProgramParser#finbloque}.
+	 * @param ctx the parse tree
+	 */
+	void exitFinblck(ProgramParser.FinblckContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code stmt_if}
 	 * labeled alternative in {@link ProgramParser#statement}.
 	 * @param ctx the parse tree

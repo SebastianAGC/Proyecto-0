@@ -42,7 +42,7 @@ varDeclaration
 
 
 structDeclaration
-	:	STRUCT ID '{' (varDeclaration)* '}'     #structDecl
+	:	STRUCT ID '{' (varDeclaration)* finbloque     #structDecl
 	;
 
 varType                                         
@@ -79,8 +79,12 @@ parameterType
 	
 
 block
-	:	'{' (varDeclaration)*(statement)* '}'       #blck
+	:	'{' (varDeclaration)*(statement)* finbloque       #blck
 	;
+
+finbloque
+    :   '}'     #finblck
+    ;
 
 statement
 	:	'if' '(' expression ')' block (statementElse)?	#stmt_if

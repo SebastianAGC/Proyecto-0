@@ -1,6 +1,5 @@
 package sample.Code;// Generated from Program.g4 by ANTLR 4.7.1
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
-import sample.Code.ProgramParser;
 
 /**
  * This interface defines a complete generic visitor for a parse tree produced
@@ -178,6 +177,13 @@ public interface ProgramVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitBlck(ProgramParser.BlckContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code finblck}
+	 * labeled alternative in {@link ProgramParser#finbloque}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFinblck(ProgramParser.FinblckContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code stmt_if}
 	 * labeled alternative in {@link ProgramParser#statement}.

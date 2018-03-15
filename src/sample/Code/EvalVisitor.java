@@ -20,7 +20,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     public String visitClassDecl(ProgramParser.ClassDeclContext ctx){
         String ScopeName = ctx.ID().getText();
         HashSet<Simbolo> hashSet = new HashSet<>();
-        scopeName.add(ScopeName);
+        scopeName.push(ScopeName);
         stack.push(hashSet);
         return visitChildren(ctx);
     }
@@ -28,32 +28,19 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     @Override
     //Metodo para verificar que una variable ya ha sido creada
     public String visitVarDecl_ID(ProgramParser.VarDecl_IDContext ctx){
-        //Obteniendo el ultimo hashset del stack
-        //if(ctx.parent.parent.getText().contains("class")){
-           /* String tipo =" de tipo " + ctx.varType().getText();
-            String id = ctx.ID().getText();
-            Simbolo s = new Simbolo(id, tipo, 0, null);
-            if(globalStack.contains(s)){
+        HashSet<Simbolo> hashSet = stack.pop();
+        String tipo =" de tipo " + ctx.varType().getText();
+        String id = ctx.ID().getText();
+        Simbolo s = new Simbolo(id, tipo, 0, null);
+        if(hashSet.contains(s)){
+            if(!error.contains("La variable  \"" + id + "\" ya ha sido creada en "+ scopeName.peek()+".\n")){
                 error += "La variable  \"" + id + "\" ya ha sido creada en "+ scopeName.peek()+".\n";
-            }else{
-                globalStack.add(s);
-            }*/
-        //}else{
-            HashSet<Simbolo> hashSet = stack.pop();
-            String tipo =" de tipo " + ctx.varType().getText();
-            String id = ctx.ID().getText();
-            Simbolo s = new Simbolo(id, tipo, 0, null);
-            if(hashSet.contains(s)){
-                error += "La variable  \"" + id + "\" ya ha sido creada en "+ scopeName.peek()+".\n";
-            }else{
-                hashSet.add(s);
             }
-            //Añadiendo la ultima hash set
-            stack.push(hashSet);
-        //}
-
-
-
+        }else{
+            hashSet.add(s);
+        }
+        //Añadiendo la ultima hash set
+        stack.push(hashSet);
         return visitChildren(ctx);
     }
 
@@ -105,7 +92,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             }
             System.out.println(firm);
         }
-        scopeName.add(id);
+        scopeName.push(id);
 
         HashSet<Simbolo>  hashSet = stack.pop();
         Simbolo s = new Simbolo(id, type, ambito, firm);
@@ -115,10 +102,20 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             hashSet.add(s);
         }
         stack.push(hashSet);
+
+        //Creando la nueva tabla de simbolos para el metodo
         HashSet<Simbolo> newHashSet = new HashSet<>();
         stack.push(newHashSet);
-        visitChildren(ctx);
+        //visitChildren(ctx);
+        //stack.pop();
+        //scopeName.pop();
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public String visitFinblck(ProgramParser.FinblckContext ctx) {
         stack.pop();
+        scopeName.pop();
         return visitChildren(ctx);
     }
 
