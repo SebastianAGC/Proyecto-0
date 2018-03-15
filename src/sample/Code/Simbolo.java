@@ -5,12 +5,14 @@ import java.util.Objects;
 public class Simbolo {
     String nombre;
     String tipo;
+    int size;
     int ambito;
     String firma;
 
-    public Simbolo(String nombre, String tipo, int ambito, String firma) {
+    public Simbolo(String nombre, String tipo, int size, int ambito, String firma) {
         this.nombre = nombre;
         this.tipo = tipo;
+        this.size = size;
         this.ambito = ambito;
         this.firma = firma;
     }

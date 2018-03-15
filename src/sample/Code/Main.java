@@ -11,7 +11,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(Main.class.getResource("sample.fxml"));
-        primaryStage.setTitle("Proyecto 0");
+        primaryStage.setTitle("ASGCompiler");
         primaryStage.setScene(new Scene(root, 882, 636));
         primaryStage.show();
     }

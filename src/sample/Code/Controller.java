@@ -72,8 +72,6 @@ public class Controller {
 
     public void compilarButtonClicked() {
         eltext.setPrefRowCount(100);
-        //String[] arg0 = { "-visitor", "S:\\Documents\\Grammar\\Hello.g4", "-package", "sample" };
-        //org.antlr.v4.Tool.main(arg0);
         errorsText.setText("");
         program = eltext.getText();
         compile(program);
