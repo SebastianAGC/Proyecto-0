@@ -71,11 +71,10 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         String id = ctx.ID().getText();
         String firm = "";
         int cantParametros = ctx.parameter().size();
-
-
         if(cantParametros!=0){
             for(int i=0;i<cantParametros;i++){
                 String parametro = ctx.parameter().get(i).getText();
+                //ctx.parameter().get()
                 String pType = "";
                 String pId = "";
                 if(parametro.contains("int")){
@@ -107,9 +106,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         //Creando la nueva tabla de simbolos para el metodo
         HashSet<Simbolo> newHashSet = new HashSet<>();
         stack.push(newHashSet);
-        //visitChildren(ctx);
-        //stack.pop();
-        //scopeName.pop();
         return visitChildren(ctx);
     }
 
@@ -122,33 +118,65 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
 
     @Override
     public String visitLocation_id(ProgramParser.Location_idContext ctx) {
+        Simbolo locationSimbol = null;
+        String locationType = "";
         String variable = ctx.ID().getText();
         boolean existe = false;
         for (HashSet<Simbolo> h:stack) {
             Simbolo s = new Simbolo(variable,null,0,ambito, null);
             if(h.contains(s) || globalStack.contains(s)){
                 existe=true;
+                for (Simbolo simbol:h) {
+                    if(simbol.equals(s)){
+                        locationSimbol = simbol;
+                    }
+                }
             }
         }
         if(existe==false){
-            error +="Error en la linea: "+ ctx.getStart().getLine() +". La variable \"" + variable +"\" no ha sido creada aun.\n";
+            String errorMessage = "Error en la linea: "+ ctx.getStart().getLine() +". La variable \"" + variable +"\" no ha sido creada aun.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }else{
+            locationType = locationSimbol.getTipo();
+            visitChildren(ctx);
         }
-        return visitChildren(ctx);
+        return locationType;
     }
 
     @Override
     public String visitLocationA(ProgramParser.LocationAContext ctx) {
         String variable = ctx.ID().getText();
+        String locationArrayType = "";
+        Simbolo theSymbol = null;
 
         for (HashSet<Simbolo> h:stack) {
             //HashSet<Simbolo> hashSet = stack.peek();
             Simbolo s = new Simbolo(variable,null,0,ambito, null);
             if(!h.contains(s) ){
-                error +="Error en la linea: "+ ctx.getStart().getLine() +". La variable \"" + variable +"\" no ha sido creada aun.\n";
+                String errorMessage ="Error en la linea: "+ ctx.getStart().getLine() +". La variable \"" + variable
+                        +"\" no ha sido creada aun.\n";
+                if(!error.contains(errorMessage)){
+                    error +=errorMessage;
+                }
+            }else{
+                for (Simbolo symbol:h) {
+                    if(symbol.equals(s)){
+                        theSymbol = symbol;
+                    }
+                }
             }
         }
+        if(theSymbol!=null){
+            locationArrayType = theSymbol.getTipo();
+            visitChildren(ctx);
+        }else{
+            visitChildren(ctx);
+        }
 
-        return visitChildren(ctx);
+
+        return locationArrayType;
     }
 
     @Override
@@ -174,6 +202,8 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     @Override
     //Metodo para verificar cuando un metodo esta siendo declarado
     public String visitCallingMethod(ProgramParser.CallingMethodContext ctx) {
+        //Variable para retornar el tipo del metodo
+        String methodType = "";
         //Obteniendo el ID del metodo
         String methodId = ctx.ID().getText();
         //Obteniendo la cantidad de parametros del metodo
@@ -187,7 +217,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             int paramSize = params.length-1;
             if(cantParam==paramSize){
                 for(int i=0;i<paramSize;i++){
-                    //Obtenidno los datos del parametro, tipo y ID
+                    //Obteniendo los datos del parametro, tipo y ID
                     if(String.valueOf(params[i].charAt(0)).equals(" ")){
                         params[i] = params[i].substring(1);
                     }
@@ -198,19 +228,23 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                     if(elSim==null){
                         //hacer aca lo que revisa las literales
                         int x =i+1;
-                        try{
-                            String p = ctx.arg().get(i).getText();
-                            if(paramType.equals("int")){
-                                Integer.parseInt(p);
-                            }else if(paramType.equals("boolean")){
-                                if(!p.toLowerCase().equals("true") && !p.toLowerCase().equals("false")){
-                                    error+="Error en la linea: "+ ctx.getStart().getLine() +". Los tipos en el parametro #" + x +" no coinciden. Se esperaba "+paramType+".\n";
-                                }
-                            }else{
-                                //Saber que hacer para validar Chars
+                        String errorMessage = "";
+                        if(paramType.equals("int")){
+                            if(!visit(ctx.arg().get(i)).equals("int")){
+                                errorMessage="Error en la linea: "+ ctx.getStart().getLine() +". Los tipos en el parametro #" + x +" no coinciden. Se esperaba "+paramType+".\n";
                             }
-                        }catch (Exception e){
-                            error+="Error en la linea: "+ ctx.getStart().getLine() +". Los tipos en el parametro #" + x +" no coinciden. Se esperaba "+paramType+".\n";
+                        }else if(paramType.equals("boolean")){
+                            if(!visit(ctx.arg().get(i)).equals("boolean")){
+                                errorMessage="Error en la linea: "+ ctx.getStart().getLine() +". Los tipos en el parametro #" + x +" no coinciden. Se esperaba "+paramType+".\n";
+                            }
+                        }else if(paramType.equals("char")){
+                             if(!visit(ctx.arg().get(i)).equals("char")){
+                                 errorMessage="Error en la linea: "+ ctx.getStart().getLine() +". Los tipos en el parametro #" + x +" no coinciden. Se esperaba "+paramType+".\n";
+                             }
+                        }
+                        //Comprueba que el error no haya sido agregado anteriormente
+                        if(!error.contains(errorMessage)){
+                            error+=errorMessage;
                         }
                     }else{
                         if(!elSim.getTipo().equals(paramType)){
@@ -219,21 +253,251 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                         }
                     }
                 }
+                methodType=t.getTipo();
+
+                visitChildren(ctx);
             }else{
                 error+="Error en la linea: "+ ctx.getStart().getLine() +". Se recibieron " + cantParam+" argumentos, se esperaban "+ paramSize+", en el metodo "+methodId+".\n";
+                visitChildren(ctx);
+            }
+        }
+        return methodType;
+    }
+
+    @Override
+    public String visitArgs(ProgramParser.ArgsContext ctx){
+        String argsType = visit(ctx.expression());
+        visitChildren(ctx);
+        return argsType;
+    }
+
+    //***********************************LOCATION************************************
+    @Override
+    public  String visitStmt_location(ProgramParser.Stmt_locationContext ctx) {
+        String expressionType = visit(ctx.expression());
+        String locationType = visit(ctx.location());
+        String errorMessage = "Error en la linea: " +ctx.getStart().getLine()+", Los tipos en " +
+                "la asignacion no coinciden. No se puede asignar \"" + expressionType +"\" a \"" +
+                locationType + "\"\n";
+        if(!expressionType.equals(locationType)){
+            if(!error.contains(errorMessage)){
+              error+=errorMessage;
+            }
+
+        }
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public String visitExp_andExpr(ProgramParser.Exp_andExprContext ctx){
+        //Retornando el tipo el tipo
+        String tipo = visitChildren(ctx);
+        return tipo;
+    }
+    @Override
+    public String visitIntegers(ProgramParser.IntegersContext ctx) {
+        //Retornando el tipo int
+        String tipo = "int";
+        return tipo;
+    }
+
+
+    @Override
+    public String visitChars(ProgramParser.CharsContext ctx) {
+        String tipo = "char";
+        return tipo;
+    }
+
+    @Override
+    public String visitBool_true(ProgramParser.Bool_trueContext ctx) {
+        //Retornando tipo booleano
+        String tipo = "boolean";
+        return tipo;
+    }
+
+    @Override
+    public String visitBool_false(ProgramParser.Bool_falseContext ctx) {
+        //Retornando tipo boolean
+        String tipo = "boolean";
+        return tipo;
+    }
+
+    @Override
+    public String visitExp_condOp(ProgramParser.Exp_condOpContext ctx) {
+        String andExprType = visit(ctx.andExpr());
+        String expressionType = visit(ctx.expression());
+        String errorMessage = "";
+        if(!andExprType.equals("boolean")){
+            errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.andExpr().getText() + " debe de ser del tipo boolean.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+
+        if(!expressionType.equals("boolean")){
+            errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.expression().getText() + "\" debe de ser del tipo boolean.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
             }
         }
         return visitChildren(ctx);
     }
 
-    @Override public String visitStmt_return(ProgramParser.Stmt_returnContext ctx) {
-        for(int i=0; i<ctx.expression().getChildCount();i++){
-            System.out.println(ctx.expression().getChild(i).getText());
+    @Override
+    public String visitAnd_condOp(ProgramParser.And_condOpContext ctx){
+        String andExprType = visit(ctx.andExpr());
+        String eqrExprType = visit(ctx.eqExpr());
+        String errorMessage ="";
+        if(!andExprType.equals("boolean")){
+            errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.andExpr().getText() + "\" debe de ser del tipo boolean.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
         }
 
-        return visitChildren(ctx); }
+        if(!eqrExprType.equals("boolean")){
+            errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.eqExpr().getText() + "\" debe de ser del tipo boolean.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public String visitUnaryExpr_diff(ProgramParser.UnaryExpr_diffContext ctx) {
+        String valueType =  visit(ctx.value());
+        if(!valueType.equals("boolean")){
+            String errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.value().getText() + " debe de ser del tipo boolean.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+        return visitChildren(ctx);
+    }
+
+    //********************EQ-OPS*********************************
+    @Override
+    public String visitEqExpr_eqOp(ProgramParser.EqExpr_eqOpContext ctx){
+        String eqExprType = visit(ctx.eqExpr());
+        String relationExprType = visit(ctx.relationExpr());
+        if(!eqExprType.equals(relationExprType)){
+            String errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", Los tipos no son compatibles.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+        return visitChildren(ctx);
+    }
+
+    //****************************rel-op*************************************
+    @Override
+    public String visitRelExpr_relOp(ProgramParser.RelExpr_relOpContext ctx){
+        String relationExprType = visit(ctx.relationExpr());
+        String addExprType = visit(ctx.addExpr());
+        String errorMessage ="";
+        if(!relationExprType.equals("int")){
+            errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.relationExpr().getText() + "\" debe de ser del tipo int.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+
+        if(!addExprType.equals("int")){
+            errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.addExpr().getText() + "\" debe de ser del tipo int.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public String visitAddExpr_arithOp(ProgramParser.AddExpr_arithOpContext ctx){
+        String addExprType = visit(ctx.addExpr());
+        String multExprType = visit(ctx.multExpr());
+        String errorMessage ="";
+        if(!addExprType.equals("int")){
+            errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.addExpr().getText() + "\" debe de ser del tipo int.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+        if(!multExprType.equals("int")){
+            errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.multExpr().getText() + "\" debe de ser del tipo int.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public String visitMultExpr_arithOp(ProgramParser.MultExpr_arithOpContext ctx){
+        String multExprType = visit(ctx.multExpr());
+        String unaryExprType = visit(ctx.unaryExpr());
+        String errorMessage ="";
+        if(!multExprType.equals("int")){
+            errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.multExpr().getText() + "\" debe de ser del tipo int.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+
+        if(!unaryExprType.equals("int")){
+            errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.unaryExpr().getText() + "\" debe de ser del tipo int.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+        return visitChildren(ctx);
+    }
+
+    //*******************************if************************************
+
+    @Override
+    public String visitStmt_if(ProgramParser.Stmt_ifContext ctx){
+        String expressionType = visit(ctx.expression());
+        if(!expressionType.equals("boolean")){
+            String errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.expression().getText() + "\" debe de ser del tipo boolean.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public String visitStmt_while(ProgramParser.Stmt_whileContext ctx){
+        String expressionType = visit(ctx.expression());
+        if(!expressionType.equals("boolean")){
+            String errorMessage="Error en la linea: " + ctx.getStart().getLine() +
+                    ", \"" + ctx.expression().getText() + "\" debe de ser del tipo boolean.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+        return visitChildren(ctx);
+    }
 
 
+
+
+
+    //This method looks up for a symbol in the stack of.
     public Simbolo searchSymbol(String symbolId, Stack<HashSet<Simbolo>> stack){
         Simbolo s = null;
         Simbolo sb = new Simbolo(symbolId, null, 0, 0,null);
@@ -248,6 +512,13 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         }
         return s;
     }
+
+    @Override
+    public String visitStmt_return(ProgramParser.Stmt_returnContext ctx) {
+
+        return visitChildren(ctx);
+    }
+
 
     public Stack<HashSet<Simbolo>> getStack() {
         return stack;
