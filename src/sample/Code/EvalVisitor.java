@@ -10,6 +10,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
 
     Stack<HashSet<Simbolo>> stack = new Stack<>();
     HashSet<Simbolo> globalStack = new HashSet<>();
+    String methodT="";
     String error = "";
     int ambito = 0;
     Stack<String> scopeName = new Stack<>();
@@ -100,6 +101,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             error += "Error en la linea: "+ ctx.getStart().getLine() +". El metodo \"" + id + "\" ya ha sido creado.\n";
         }else{
             hashSet.add(s);
+            methodT = type;
         }
         stack.push(hashSet);
 
@@ -384,6 +386,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     //********************EQ-OPS*********************************
     @Override
     public String visitEqExpr_eqOp(ProgramParser.EqExpr_eqOpContext ctx){
+        String tipo = null;
         String eqExprType = visit(ctx.eqExpr());
         String relationExprType = visit(ctx.relationExpr());
         if(!eqExprType.equals(relationExprType)){
@@ -392,13 +395,18 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
+        }else{
+            visitChildren(ctx);
+            tipo = "boolean";
         }
-        return visitChildren(ctx);
+        return tipo;
     }
 
     //****************************rel-op*************************************
     @Override
     public String visitRelExpr_relOp(ProgramParser.RelExpr_relOpContext ctx){
+        int correctos =0;
+        String tipo = null;
         String relationExprType = visit(ctx.relationExpr());
         String addExprType = visit(ctx.addExpr());
         String errorMessage ="";
@@ -408,6 +416,8 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
+        }else{
+            correctos++;
         }
 
         if(!addExprType.equals("int")){
@@ -416,8 +426,14 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
+        }else{
+            correctos++;
         }
-        return visitChildren(ctx);
+        if(correctos==2){
+            visitChildren(ctx);
+            tipo = "boolean";
+        }
+        return tipo;
     }
 
     @Override
@@ -477,6 +493,10 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                 error+=errorMessage;
             }
         }
+            //Creando la nueva tabla de simbolos para el metodo
+            HashSet<Simbolo> newHashSet = new HashSet<>();
+            stack.push(newHashSet);
+
         return visitChildren(ctx);
     }
 
@@ -490,6 +510,10 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                 error+=errorMessage;
             }
         }
+            //Creando la nueva tabla de simbolos para el metodo
+            HashSet<Simbolo> newHashSet = new HashSet<>();
+            stack.push(newHashSet);
+
         return visitChildren(ctx);
     }
 
@@ -497,7 +521,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
 
 
 
-    //This method looks up for a symbol in the stack of.
+    //This method looks up for a symbol in the stack.
     public Simbolo searchSymbol(String symbolId, Stack<HashSet<Simbolo>> stack){
         Simbolo s = null;
         Simbolo sb = new Simbolo(symbolId, null, 0, 0,null);
@@ -515,9 +539,48 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
 
     @Override
     public String visitStmt_return(ProgramParser.Stmt_returnContext ctx) {
+        String methodType = methodT;
+        String returnType = visit(ctx.expression());
+        String errorMessage = "";
+        if(methodType.equals("void")){
+            errorMessage = "Error en la linea: "+ctx.getStart().getLine()+
+                    ", El metodo no puede contener \"return\" si es de tipo void. \n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }else if(!methodType.equals(returnType)){
+            errorMessage = "Error en la linea: "+ctx.getStart().getLine()+
+                    ", El tipo de \"return\" y del metodo debe ser el mismo. \n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
 
         return visitChildren(ctx);
     }
+
+    //*********************RETURN METHOD CALL***********************************
+    @Override
+    public String visitValue_methodCall(ProgramParser.Value_methodCallContext ctx){
+        String methodType = visit(ctx.methodCall());
+        if(methodType.equals("void")){
+            String errorMessage = "Error en la linea: " + ctx.getStart().getLine()+
+                    ", El tipo de retorno del metodo debe ser distinto de void.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public String visitStmtElse(ProgramParser.StmtElseContext ctx){
+        //Creando la nueva tabla de simbolos para el metodo
+        HashSet<Simbolo> newHashSet = new HashSet<>();
+        stack.push(newHashSet);
+        return visitChildren(ctx);
+    }
+
 
 
     public Stack<HashSet<Simbolo>> getStack() {
@@ -533,7 +596,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     }
 
     public void existeMain(){
-        //JOptionPane.showMessageDialog(null,stack.size());
         boolean existe = false;
         for (HashSet<Simbolo> h: stack) {
 
@@ -546,7 +608,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             }
 
         }
-
         if(existe==false){
             error+="Se espero un metodo principal \"main\" que no tuviera parametros.\n";
         }
