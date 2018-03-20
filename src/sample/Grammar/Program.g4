@@ -163,7 +163,7 @@ unaryExpr
 
 value
 	:	location		            #value_location
-    |   locationArray2              #value_locationArray2
+    |   locationArr+ay2              #value_locationArray2
 	|	methodCall                  #value_methodCall
 	|	literal                     #value_literal
 	|	'(' expression ')'          #value_expr

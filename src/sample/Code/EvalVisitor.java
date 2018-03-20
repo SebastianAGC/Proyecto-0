@@ -27,7 +27,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     }
 
     @Override
-    //Metodo para verificar que una variable ya ha sido creada
+    //Metodo para crear una nueva variable.
     public String visitVarDecl_ID(ProgramParser.VarDecl_IDContext ctx){
         HashSet<Simbolo> hashSet = stack.pop();
         String tipo =ctx.varType().getText();
@@ -46,7 +46,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     }
 
     @Override
-
+    //Metodo para crear una nueva estructura.
     public String visitStructDecl(ProgramParser.StructDeclContext ctx){
         String struct = ctx.STRUCT().getText();
         String id = ctx.ID().getText();
