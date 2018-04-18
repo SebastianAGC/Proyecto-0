@@ -2,6 +2,7 @@
   <library name="richtextfx-0.8.2">
     <CLASSES>
       <root url="jar://S:/Downloads/Instaladores/richtextfx-0.8.2.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/richtextfx-0.8.2.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

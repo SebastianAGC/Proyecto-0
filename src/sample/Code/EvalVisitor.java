@@ -1,9 +1,6 @@
 package sample.Code;
 
-import javax.swing.*;
-import java.nio.file.SimpleFileVisitor;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Stack;
 
 public class EvalVisitor extends ProgramBaseVisitor<String> {
@@ -75,7 +72,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         if(cantParametros!=0){
             for(int i=0;i<cantParametros;i++){
                 String parametro = ctx.parameter().get(i).getText();
-                //ctx.parameter().get()
                 String pType = "";
                 String pId = "";
                 if(parametro.contains("int")){

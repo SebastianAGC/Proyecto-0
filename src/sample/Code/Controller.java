@@ -1,57 +1,42 @@
 package sample.Code;
+
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.atn.ATNConfigSet;
-import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.gui.TreeViewer;
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.LineNumberFactory;
 
-import javax.print.PrintException;
-import javax.print.attribute.standard.DialogTypeSelection;
-import java.io.File;
-import javafx.scene.control.*;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.stage.StageStyle;
-
-import java.awt.*;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.*;
 import java.io.*;
-import java.util.List;
+import java.net.URL;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.scene.Group;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
 
-import javafx.scene.layout.VBox;
-
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-
-public class Controller {
+public class Controller implements Initializable {
 
     @FXML private TabPane tabPane;
-    @FXML private TextArea eltext;
+    @FXML private CodeArea eltext;
     @FXML private TreeView<String> treeView;
     @FXML public TextArea errorsText;
+
+
+
     String program = "";
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        eltext.setParagraphGraphicFactory(LineNumberFactory.get(eltext));
+    }
+
 
     public void cargarGramatica(){
         FileChooser fileChooser = new FileChooser();
@@ -65,13 +50,13 @@ public class Controller {
         File selectedFile = fileChooser.showOpenDialog(null);
         if(selectedFile!=null){
             selectedFile.getAbsoluteFile();
-            eltext.setText(readFile(selectedFile));
+            eltext.replaceText(readFile(selectedFile));
         }
 
     }
 
     public void compilarButtonClicked() {
-        eltext.setPrefRowCount(100);
+
         errorsText.setText("");
         program = eltext.getText();
         compile(program);
@@ -148,20 +133,6 @@ public class Controller {
             String m = e.toString();
             errorsText.setText(m);
         }
-
-
-        /*
-        TreeViewer viewer = new TreeViewer(Arrays.asList(parser.getRuleNames()), tree);
-        viewer.setBorderColor(Color.WHITE);
-        viewer.setBoxColor(Color.WHITE);
-        try {
-            viewer.save("tree.jpg");
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (PrintException e) {
-            e.printStackTrace();
-        }*/
-
 
     }
 
