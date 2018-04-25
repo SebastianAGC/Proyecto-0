@@ -9,12 +9,15 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     HashSet<Simbolo> globalStack = new HashSet<>();
     String methodT="";
     String error = "";
-    int ambito = 0;
+    int memory = 0;
+    int offset;
+    int contTemps = 0;
+    String intCode = "";
+    String elTemporal = "";
     Stack<String> scopeName = new Stack<>();
 
 
     @Override
-
     public String visitClassDecl(ProgramParser.ClassDeclContext ctx){
         String ScopeName = ctx.ID().getText();
         HashSet<Simbolo> hashSet = new HashSet<>();
@@ -23,19 +26,28 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         return visitChildren(ctx);
     }
 
+    /*
+     *Metodo para crear una nueva variable.
+     */
     @Override
-    //Metodo para crear una nueva variable.
     public String visitVarDecl_ID(ProgramParser.VarDecl_IDContext ctx){
         HashSet<Simbolo> hashSet = stack.pop();
         String tipo =ctx.varType().getText();
         String id = ctx.ID().getText();
-        Simbolo s = new Simbolo(id, tipo, 0, ambito,null);
+        Simbolo s = new Simbolo(id, tipo, 0, offset,null);
         if(hashSet.contains(s)){
             if(!error.contains("Error en la linea: "+ ctx.getStart().getLine() +". La variable  \"" + id + "\" ya ha sido creada en "+ scopeName.peek()+".\n")){
                 error +="Error en la linea: "+ ctx.getStart().getLine() +". La variable  \"" + id + "\" ya ha sido creada en "+ scopeName.peek()+".\n";
             }
         }else{
             hashSet.add(s);
+            if(s.getTipo().equals("int")){
+                offset += 4;
+            }else if(s.getTipo().equals("char")){
+                offset += 4;
+            }else if(s.getTipo().equals("boolean")){
+                offset += 1;
+            }
         }
         //Añadiendo la ultima hash set
         stack.push(hashSet);
@@ -43,12 +55,14 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     }
 
     @Override
-    //Metodo para crear una nueva estructura.
+    /*
+    * Metodo para crear una nueva estructura.
+     */
     public String visitStructDecl(ProgramParser.StructDeclContext ctx){
         String struct = ctx.STRUCT().getText();
         String id = ctx.ID().getText();
         HashSet<Simbolo> hashSet = stack.pop();
-        Simbolo s = new Simbolo(id, struct, 0,ambito,null);
+        Simbolo s = new Simbolo(id, struct, 0,offset,null);
         if(hashSet.contains(s)){
             error += "Error en la linea: "+ ctx.getStart().getLine() +". La estructura " + id + " ya ha sido creada.\n";
         }else{
@@ -60,11 +74,9 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         return visitChildren(ctx);
     }
 
-
     @Override
 
     public String visitMethodDecl(ProgramParser.MethodDeclContext ctx){
-
         String type = ctx.methodType().getText();
         String id = ctx.ID().getText();
         String firm = "";
@@ -85,19 +97,19 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                     pId = parametro.substring(7);
                 }
                 firm+=pType+" "+pId +", ";
-
             }
             System.out.println(firm);
         }
         scopeName.push(id);
 
         HashSet<Simbolo>  hashSet = stack.pop();
-        Simbolo s = new Simbolo(id, type, 0, ambito, firm);
+        Simbolo s = new Simbolo(id, type, 0, offset, firm);
         if(hashSet.contains(s)){
             error += "Error en la linea: "+ ctx.getStart().getLine() +". El metodo \"" + id + "\" ya ha sido creado.\n";
         }else{
             hashSet.add(s);
             methodT = type;
+            intCode += s.nombre + ":\n";
         }
         stack.push(hashSet);
 
@@ -121,7 +133,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         String variable = ctx.ID().getText();
         boolean existe = false;
         for (HashSet<Simbolo> h:stack) {
-            Simbolo s = new Simbolo(variable,null,0,ambito, null);
+            Simbolo s = new Simbolo(variable,null,0, offset, null);
             if(h.contains(s) || globalStack.contains(s)){
                 existe=true;
                 for (Simbolo simbol:h) {
@@ -151,7 +163,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
 
         for (HashSet<Simbolo> h:stack) {
             //HashSet<Simbolo> hashSet = stack.peek();
-            Simbolo s = new Simbolo(variable,null,0,ambito, null);
+            Simbolo s = new Simbolo(variable,null,0, offset, null);
             if(!h.contains(s) ){
                 String errorMessage ="Error en la linea: "+ ctx.getStart().getLine() +". La variable \"" + variable
                         +"\" no ha sido creada aun.\n";
@@ -184,7 +196,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         String number = ctx.NUM().getText();
         int n = Integer.parseInt(number);
 
-        Simbolo s = new Simbolo(ctx.ID().getText(),ctx.varType().getText(),n,ambito, null);
+        Simbolo s = new Simbolo(ctx.ID().getText(),ctx.varType().getText(),n, offset, null);
         if(stack.peek().contains(s)){
             error+="Error en la linea: "+ ctx.getStart().getLine() +". El arreglo \""+ctx.ID().getText()+"\" ya ha sido creado en "+ scopeName.peek()+".\n";
         }else{
@@ -281,21 +293,33 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             if(!error.contains(errorMessage)){
               error+=errorMessage;
             }
-
+        }else{
+            HashSet<Simbolo> table = stack.peek();
+            for (Simbolo s: table) {
+                String loc = ctx.location().getText();
+                if(s.getNombre().equals(loc)){
+                    intCode+= "S[" + s.getOffset() + "] = " + elTemporal + "\n";
+                }
+            }
         }
-        return visitChildren(ctx);
+        //se cambio return
+        return "";
     }
 
     @Override
     public String visitExp_andExpr(ProgramParser.Exp_andExprContext ctx){
         //Retornando el tipo el tipo
         String tipo = visitChildren(ctx);
+        String temporalAndExpr = elTemporal;
+        //contTemps++;
+        //intCode+= "t" + contTemps + " = " + temporalAndExpr + "\n";
         return tipo;
     }
     @Override
     public String visitIntegers(ProgramParser.IntegersContext ctx) {
         //Retornando el tipo int
         String tipo = "int";
+        elTemporal = ctx.getText();
         return tipo;
     }
 
@@ -303,6 +327,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     @Override
     public String visitChars(ProgramParser.CharsContext ctx) {
         String tipo = "char";
+        elTemporal = ctx.getText();
         return tipo;
     }
 
@@ -310,6 +335,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     public String visitBool_true(ProgramParser.Bool_trueContext ctx) {
         //Retornando tipo booleano
         String tipo = "boolean";
+        elTemporal = tipo;
         return tipo;
     }
 
@@ -317,20 +343,29 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     public String visitBool_false(ProgramParser.Bool_falseContext ctx) {
         //Retornando tipo boolean
         String tipo = "boolean";
+        elTemporal = tipo;
         return tipo;
     }
 
     @Override
     public String visitExp_condOp(ProgramParser.Exp_condOpContext ctx) {
+        int cont = 0;
         String andExprType = visit(ctx.andExpr());
+        String andExprTemp = elTemporal;
+
         String expressionType = visit(ctx.expression());
+
+        String expressionTemp = elTemporal;
         String errorMessage = "";
         if(!andExprType.equals("boolean")){
             errorMessage="Error en la linea: " + ctx.getStart().getLine() +
                     ", \"" + ctx.andExpr().getText() + " debe de ser del tipo boolean.\n";
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
+                cont++;
             }
+        }else{
+            cont++;
         }
 
         if(!expressionType.equals("boolean")){
@@ -339,14 +374,26 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
+        }else{
+            cont++;
+        }
+        if(cont==2){
+            contTemps++;
+            intCode+= "t" + contTemps + " = " + andExprTemp + ctx.cond_op().getText() + expressionTemp + "\n";
+            elTemporal = "t"+contTemps;
         }
         return visitChildren(ctx);
     }
 
     @Override
     public String visitAnd_condOp(ProgramParser.And_condOpContext ctx){
+        int cont = 0;
         String andExprType = visit(ctx.andExpr());
+        String andExprTemp = elTemporal;
+
         String eqrExprType = visit(ctx.eqExpr());
+        String eqrExprTemp = elTemporal;
+
         String errorMessage ="";
         if(!andExprType.equals("boolean")){
             errorMessage="Error en la linea: " + ctx.getStart().getLine() +
@@ -354,6 +401,8 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
+        }else{
+            cont++;
         }
 
         if(!eqrExprType.equals("boolean")){
@@ -362,7 +411,15 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
+        }else{
+            cont++;
         }
+        if(cont==2){
+            contTemps++;
+            intCode+= "t" + contTemps + " = " + andExprTemp + ctx.cond_op().getText() + eqrExprTemp + "\n";
+            elTemporal = "t"+contTemps;
+        }
+
         return visitChildren(ctx);
     }
 
@@ -382,9 +439,14 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     //********************EQ-OPS*********************************
     @Override
     public String visitEqExpr_eqOp(ProgramParser.EqExpr_eqOpContext ctx){
+        int cont = 0;
         String tipo = null;
         String eqExprType = visit(ctx.eqExpr());
+        String eqExprTemp = elTemporal;
+
         String relationExprType = visit(ctx.relationExpr());
+        String relationExprTemp = elTemporal;
+
         if(!eqExprType.equals(relationExprType)){
             String errorMessage="Error en la linea: " + ctx.getStart().getLine() +
                     ", Los tipos no son compatibles.\n";
@@ -392,11 +454,15 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                 error+=errorMessage;
             }
         }else{
+            contTemps++;
+            intCode+= "t" + contTemps + " = " + eqExprTemp + ctx.eq_op().getText() + relationExprTemp + "\n";
+            elTemporal = "t"+contTemps;
             visitChildren(ctx);
             tipo = "boolean";
         }
         return tipo;
     }
+
 
     //****************************rel-op*************************************
     @Override
@@ -404,7 +470,11 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         int correctos =0;
         String tipo = null;
         String relationExprType = visit(ctx.relationExpr());
+        String relationExprTemp = elTemporal;
+
         String addExprType = visit(ctx.addExpr());
+        String addExprTemp = elTemporal;
+
         String errorMessage ="";
         if(!relationExprType.equals("int")){
             errorMessage="Error en la linea: " + ctx.getStart().getLine() +
@@ -426,6 +496,9 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             correctos++;
         }
         if(correctos==2){
+            contTemps++;
+            intCode+= "t" + contTemps + " = " + relationExprTemp + ctx.rel_op().getText() + addExprTemp + "\n";
+            elTemporal = "t"+contTemps;
             visitChildren(ctx);
             tipo = "boolean";
         }
@@ -434,8 +507,13 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
 
     @Override
     public String visitAddExpr_arithOp(ProgramParser.AddExpr_arithOpContext ctx){
+        int cont = 0;
         String addExprType = visit(ctx.addExpr());
+        String addExprTemp = elTemporal;
+
         String multExprType = visit(ctx.multExpr());
+        String multExprTemp = elTemporal;
+
         String errorMessage ="";
         if(!addExprType.equals("int")){
             errorMessage="Error en la linea: " + ctx.getStart().getLine() +
@@ -443,6 +521,8 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
+        }else{
+            cont++;
         }
         if(!multExprType.equals("int")){
             errorMessage="Error en la linea: " + ctx.getStart().getLine() +
@@ -450,14 +530,28 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
+        }else{
+            cont++;
         }
+
+        if(cont==2){
+            contTemps++;
+            intCode+= "t" + contTemps + " = " + addExprTemp + ctx.arith_op().getText() + multExprTemp + "\n";
+            elTemporal = "t"+contTemps;
+        }
+
         return visitChildren(ctx);
     }
 
     @Override
     public String visitMultExpr_arithOp(ProgramParser.MultExpr_arithOpContext ctx){
+        int cont = 0;
         String multExprType = visit(ctx.multExpr());
+        String multExprTemp = elTemporal;
+
         String unaryExprType = visit(ctx.unaryExpr());
+        String unaryExprTemp = elTemporal;
+
         String errorMessage ="";
         if(!multExprType.equals("int")){
             errorMessage="Error en la linea: " + ctx.getStart().getLine() +
@@ -465,6 +559,8 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
+        }else{
+            cont++;
         }
 
         if(!unaryExprType.equals("int")){
@@ -473,7 +569,16 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
+        }else{
+            cont++;
         }
+
+        if(cont==2){
+            contTemps++;
+            intCode+= "t" + contTemps + " = " + multExprTemp + ctx.arith_op().getText() + unaryExprTemp + "\n";
+            elTemporal = "t"+contTemps;
+        }
+
         return visitChildren(ctx);
     }
 
@@ -492,7 +597,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             //Creando la nueva tabla de simbolos para el metodo
             HashSet<Simbolo> newHashSet = new HashSet<>();
             stack.push(newHashSet);
-
         return visitChildren(ctx);
     }
 
@@ -513,11 +617,9 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         return visitChildren(ctx);
     }
 
-
-
-
-
-    //This method looks up for a symbol in the stack.
+    /*
+     *This method looks up for a symbol in the stack.
+     */
     public Simbolo searchSymbol(String symbolId, Stack<HashSet<Simbolo>> stack){
         Simbolo s = null;
         Simbolo sb = new Simbolo(symbolId, null, 0, 0,null);
@@ -577,6 +679,20 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         return visitChildren(ctx);
     }
 
+    @Override public String visitValue_location(ProgramParser.Value_locationContext ctx) {
+        String loc = ctx.location().getText();
+        Simbolo s = searchSymbol(loc, stack);
+        elTemporal = "S[" +s.getOffset()+"]";
+        /*
+        HashSet<Simbolo> h = stack.peek();
+        for (Simbolo s:h) {
+            if(s.getNombre().equals(loc)){
+                elTemporal = "S[" +s.getOffset()+"]";
+            }
+        }*/
+        return visitChildren(ctx);
+    }
+
 
 
     public Stack<HashSet<Simbolo>> getStack() {
@@ -587,25 +703,21 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         return error;
     }
 
-    public int getAmbito() {
-        return ambito;
-    }
-
     public void existeMain(){
         boolean existe = false;
         for (HashSet<Simbolo> h: stack) {
-
             for (Simbolo s:h) {
                 if(s.getNombre().equals("main")){
                     if(s.getFirma().equals("")){
-                        existe = true;
+                        if(s.getTipo().equals("void")){
+                            existe = true;
+                        }
                     }
                 }
             }
-
         }
         if(existe==false){
-            error+="Se espero un metodo principal \"main\" que no tuviera parametros.\n";
+            error+="Se espero un metodo principal \"main\" de tipo void que no tuviera parametros.\n";
         }
     }
 }

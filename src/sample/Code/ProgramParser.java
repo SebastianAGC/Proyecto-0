@@ -1166,7 +1166,7 @@ public class ProgramParser extends Parser {
 		public Stmt_locationContext(StatementContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ProgramVisitor ) return ((ProgramVisitor<? extends T>)visitor).visitStmt_location(this);
+		if ( visitor instanceof ProgramVisitor ) return ((ProgramVisitor<? extends T>)visitor).visitStmt_location(this);
 			else return visitor.visitChildren(this);
 		}
 	}

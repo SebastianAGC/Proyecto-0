@@ -14,7 +14,6 @@ import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
-
 import java.io.*;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -27,16 +26,14 @@ public class Controller implements Initializable {
     @FXML private CodeArea eltext;
     @FXML private TreeView<String> treeView;
     @FXML public TextArea errorsText;
-
-
-
+    @FXML public TextArea intCodeText;
     String program = "";
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         eltext.setParagraphGraphicFactory(LineNumberFactory.get(eltext));
+        errorsText.setWrapText(true);
     }
-
 
     public void cargarGramatica(){
         FileChooser fileChooser = new FileChooser();
@@ -44,7 +41,6 @@ public class Controller implements Initializable {
         FileChooser.ExtensionFilter extFilter =
                 new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
         fileChooser.getExtensionFilters().add(extFilter);
-
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt"));
         fileChooser.setTitle("Open Grammar File");
         File selectedFile = fileChooser.showOpenDialog(null);
@@ -52,16 +48,12 @@ public class Controller implements Initializable {
             selectedFile.getAbsoluteFile();
             eltext.replaceText(readFile(selectedFile));
         }
-
     }
 
     public void compilarButtonClicked() {
-
         errorsText.setText("");
         program = eltext.getText();
         compile(program);
-        tabPane.getSelectionModel().selectNext();
-
     }
 
     private String readFile(File file){
@@ -69,7 +61,6 @@ public class Controller implements Initializable {
         BufferedReader bufferedReader = null;
         String cadena="";
         try {
-
             bufferedReader = new BufferedReader(new FileReader(file));
             bufferedReader.toString();
             String text;
@@ -90,14 +81,11 @@ public class Controller implements Initializable {
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-
         return cadena;
     }
 
     public void compile(String expression) {
-
         try{
-
             errorsText.setText("");
             CharStream stream = CharStreams.fromString(expression);
             ProgramLexer lexer  = new ProgramLexer(stream);
@@ -117,30 +105,30 @@ public class Controller implements Initializable {
             if(eval.getError().equals("")){
                 //show AST in console
                 System.out.println(tree.toStringTree(parser));
-
                 //Show in GUI
                 String raiz = tree.toStringTree(parser);
-
                 //treeView.setRoot(generatingRoot(raiz));
                 treeView.setRoot(generatingRoot(raiz, tree));
                 errorsText.setText(raiz);
+                intCodeText.setText(eval.intCode);
+                tabPane.getSelectionModel().select(2);
 
             }else{
                 errorsText.setText(eval.getError());
+                tabPane.getSelectionModel().select(1);
             }
 
         }catch(Exception e){
             String m = e.toString();
             errorsText.setText(m);
+            tabPane.getSelectionModel().select(1);
         }
 
     }
 
     public TreeItem<String> generatingRoot(String tree, ParseTree treeP){
         TreeItem<String> root = new TreeItem<>("ARBOL SINTACTICO");
-        //TreeItem<String> mainChild = readTree(tree, root);
         TreeItem<String> mainChild = treeGenerator(treeP, root);
-        //root.getChildren().add(mainChild);
         return mainChild;
     }
 
@@ -170,15 +158,11 @@ public class Controller implements Initializable {
                     }else if(!evaluatedChar.equals(" ")){
 
                     }
-
                 }
-
                 child = readTree(tree.substring(i+1, indicador), child);
                 i=indicador;
-                //root.getChildren().add(child);
                 contAbierto=0;
                 contCerrado=0;
-
             }else if(evaluatedChar.equals(")")){
                 //hacer si se cierra.
                 child = new TreeItem<>(childContent);
@@ -191,7 +175,6 @@ public class Controller implements Initializable {
                     root.getChildren().add(child);
                     childContent="";
                 }
-
                 root.getChildren().add(readTree(tree.substring(i+1), child));
             }else{
                 childContent+=evaluatedChar;
@@ -199,9 +182,8 @@ public class Controller implements Initializable {
                     child = new TreeItem<>(childContent);
                     root.getChildren().add(child);
                 }
-             }
+            }
         }
-
         return root;
     }
 
@@ -217,5 +199,4 @@ public class Controller implements Initializable {
         }
         return root;
     }
-
 }

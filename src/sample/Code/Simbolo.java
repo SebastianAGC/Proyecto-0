@@ -6,14 +6,14 @@ public class Simbolo {
     String nombre;
     String tipo;
     int size;
-    int ambito;
+    int offset;
     String firma;
 
-    public Simbolo(String nombre, String tipo, int size, int ambito, String firma) {
+    public Simbolo(String nombre, String tipo, int size, int offset, String firma) {
         this.nombre = nombre;
         this.tipo = tipo;
         this.size = size;
-        this.ambito = ambito;
+        this.offset = offset;
         this.firma = firma;
     }
 
@@ -33,12 +33,12 @@ public class Simbolo {
         this.tipo = tipo;
     }
 
-    public int getAmbito() {
-        return ambito;
+    public int getOffset() {
+        return offset;
     }
 
-    public void setAmbito(int ambito) {
-        this.ambito = ambito;
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
 
     public String getFirma() {
