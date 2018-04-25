@@ -18,7 +18,7 @@ fragment DIGIT :'0'..'9' ;
 
 ID : LETTER ( LETTER | DIGIT )* ;
 NUM : DIGIT ( DIGIT )* ;
-Char : LETTER;
+Char : '\''LETTER'\'';
 
 
 WS : 
@@ -57,7 +57,6 @@ varType
 methodDeclaration
 	:	methodType ID '(' (parameter | (parameter (',' parameter)*)*) ')' block     #methodDecl
 	;
-
 	
 methodType
 	:	INT                 #method_int
@@ -111,13 +110,8 @@ locationMember
 	;
 
 locationArray
-        :   ID '[' expression ']' ('.' locationMember)? #locationA
-            
-        ;
-locationArray2
-        :   ID '[' expression ']' ('.' locationMember)? #locationA2
-            
-        ;
+    :   ID '[' expression ']' ('.' locationMember)? #locationA
+    ;
 
 locationMethod
     : '.' locationMember        #locMethod
@@ -125,12 +119,12 @@ locationMethod
 
 expression 
 	:	andExpr				            #exp_andExpr
-	| 	expression cond_op andExpr  	#exp_condOp
+	| 	expression cond_op_or andExpr  	#exp_condOp
 	;
 
 andExpr
 	: 	eqExpr				            #and_eqExpr
-	| 	andExpr cond_op eqExpr 	        #and_condOp
+	| 	andExpr cond_op_and eqExpr 	        #and_condOp
 	;
 
 eqExpr
@@ -150,9 +144,8 @@ addExpr
 
 multExpr
 	: 	unaryExpr 			            #multExpr_unaryExpr
-	| 	multExpr arith_op unaryExpr     #multExpr_arithOp
+	| 	multExpr mult_op unaryExpr     #multExpr_arithOp
 	;
-
 
 unaryExpr
 	:  	'('(INT|CHAR)')'  value		#unaryExpr_intchar
@@ -163,14 +156,11 @@ unaryExpr
 
 value
 	:	location		            #value_location
-    |   locationArray2              #value_locationArray2
 	|	methodCall                  #value_methodCall
 	|	literal                     #value_literal
 	|	'(' expression ')'          #value_expr
 	;
 
-
-	
 methodCall
 	:	ID '(' (arg (',' arg)*)? ')' #callingMethod
 	;
@@ -182,12 +172,14 @@ arg
 arith_op
 	:	'+'                 #ao_plus
 	| 	'-'                 #ao_minus
-	|	'*'                 #ao_mult
-	|	'/'                 #ao_div
-	|	'%'                 #ao_mod
 	;
 
-	
+mult_op
+    :   '*'                 #ao_mult
+    |	'/'                 #ao_div
+    |	'%'                 #ao_mod
+    ;
+
 rel_op
 	:	'<'                 #relop_lower
 	|	'>'                 #relop_greater
@@ -200,11 +192,13 @@ eq_op
 	|	'!='            #eqop_diff
 	;
 	
-cond_op
+cond_op_or
 	: '||'              #condop_or
-	| '&&'              #condop_and
 	;
 
+cond_op_and
+	: '&&'              #condop_and
+	;
 
 literal
 	:	int_literal             #literal_int
