@@ -1,9 +1,11 @@
 // Generated from Program.g4 by ANTLR 4.7.1
+package Grammar;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import sample.Code.ProgramParser;
+import sample.Grammar.ProgramListener;
 
 /**
  * This class provides an empty implementation of {@link ProgramListener},
@@ -472,18 +474,6 @@ public class ProgramBaseListener implements ProgramListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterLocationA2(ProgramParser.LocationA2Context ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitLocationA2(ProgramParser.LocationA2Context ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterLocMethod(ProgramParser.LocMethodContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -695,18 +685,6 @@ public class ProgramBaseListener implements ProgramListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitValue_location(ProgramParser.Value_locationContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterValue_locationArray2(ProgramParser.Value_locationArray2Context ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitValue_locationArray2(ProgramParser.Value_locationArray2Context ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

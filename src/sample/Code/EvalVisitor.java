@@ -56,7 +56,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
 
     @Override
     /*
-    * Metodo para crear una nueva estructura.
+     *Metodo para crear una nueva estructura.
      */
     public String visitStructDecl(ProgramParser.StructDeclContext ctx){
         String struct = ctx.STRUCT().getText();
@@ -284,14 +284,15 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     public  String visitStmt_location(ProgramParser.Stmt_locationContext ctx) {
         String expressionType = visit(ctx.expression());
         String locationType = visit(ctx.location());
-        String errorMessage = "Error en la linea: " +ctx.getStart().getLine()+", Los tipos en " +
-                "la asignacion no coinciden. No se puede asignar \"" + expressionType +"\" a \"" +
-                locationType + "\"\n";
 
         //dividiendo expressionType ej. int, 5
         //Parte 0 = tipo
         //Parte 1 = temporal
         String[] parts = splitString(expressionType);
+
+        String errorMessage = "Error en la linea: " +ctx.getStart().getLine()+", Los tipos en " +
+                "la asignacion no coinciden. No se puede asignar \"" + parts[0] +"\" a \"" +
+                locationType + "\"\n";
 
         if(!parts[0].equals(locationType)){
             if(!error.contains(errorMessage)){
@@ -307,12 +308,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         return "";
     }
 
-    @Override
-    public String visitExp_andExpr(ProgramParser.Exp_andExprContext ctx){
-        //Retornando el tipo el tipo
-        String tipo = visitChildren(ctx);
-        return tipo;
-    }
     @Override
     public String visitIntegers(ProgramParser.IntegersContext ctx) {
         //Retornando el tipo int
@@ -387,7 +382,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         }
         if(cont==2){
             contTemps++;
-            intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.cond_op().getText() + parts1[parts1.length-1] + "\n";
+            intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.cond_op_or().getText() + parts1[parts1.length-1] + "\n";
             elTemporal = "t"+contTemps;
         }
 
@@ -427,7 +422,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         }
         if(cont==2){
             contTemps++;
-            intCode+= "t" + contTemps + " = " + andExprType + ctx.cond_op().getText() + eqrExprType + "\n";
+            intCode+= "t" + contTemps + " = " + andExprType + ctx.cond_op_and().getText() + eqrExprType + "\n";
             elTemporal = "t"+contTemps;
         }
 
@@ -526,12 +521,25 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         int cont = 0;
         String addExprType = visit(ctx.addExpr());
         //String addExprTemp = elTemporal;
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts = splitString(addExprType);
+
+
+
 
         String multExprType = visit(ctx.multExpr());
         //String multExprTemp = elTemporal;
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts1 = splitString(multExprType);
+
+
 
         String errorMessage ="";
-        if(!addExprType.equals("int")){
+        if(!parts[0].equals("int")){
             errorMessage="Error en la linea: " + ctx.getStart().getLine() +
                     ", \"" + ctx.addExpr().getText() + "\" debe de ser del tipo int.\n";
             if(!error.contains(errorMessage)){
@@ -540,7 +548,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         }else{
             cont++;
         }
-        if(!multExprType.equals("int")){
+        if(!parts1[0].equals("int")){
             errorMessage="Error en la linea: " + ctx.getStart().getLine() +
                     ", \"" + ctx.multExpr().getText() + "\" debe de ser del tipo int.\n";
             if(!error.contains(errorMessage)){
@@ -552,7 +560,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
 
         if(cont==2){
             contTemps++;
-            intCode+= "t" + contTemps + " = " + addExprType + ctx.arith_op().getText() + multExprType + "\n";
+            intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.arith_op().getText() + parts1[parts1.length-1] + "\n";
             elTemporal = "t"+contTemps;
         }
 
@@ -601,7 +609,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
 
         if(cont==2){
             contTemps++;
-            intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.arith_op().getText() + parts1[parts1.length-1] + "\n";
+            intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.mult_op().getText() + parts1[parts1.length-1] + "\n";
             elTemporal = "t"+contTemps;
         }
 
@@ -724,8 +732,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         return visitChildren(ctx) + ", " +elTemporal;
     }
 
-
-
     public Stack<HashSet<Simbolo>> getStack() {
         return stack;
     }
@@ -751,5 +757,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             error+="Se espero un metodo principal \"main\" de tipo void que no tuviera parametros.\n";
         }
     }
+
 }
 

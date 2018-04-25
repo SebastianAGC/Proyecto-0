@@ -1,4 +1,5 @@
-package sample.Code;// Generated from Program.g4 by ANTLR 4.7.1
+// Generated from Program.g4 by ANTLR 4.7.1
+package sample.Code;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
@@ -276,13 +277,6 @@ public interface ProgramVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitLocationA(ProgramParser.LocationAContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code locationA2}
-	 * labeled alternative in {@link ProgramParser#locationArray2}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLocationA2(ProgramParser.LocationA2Context ctx);
-	/**
 	 * Visit a parse tree produced by the {@code locMethod}
 	 * labeled alternative in {@link ProgramParser#locationMethod}.
 	 * @param ctx the parse tree
@@ -409,13 +403,6 @@ public interface ProgramVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitValue_location(ProgramParser.Value_locationContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code value_locationArray2}
-	 * labeled alternative in {@link ProgramParser#value}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitValue_locationArray2(ProgramParser.Value_locationArray2Context ctx);
-	/**
 	 * Visit a parse tree produced by the {@code value_methodCall}
 	 * labeled alternative in {@link ProgramParser#value}.
 	 * @param ctx the parse tree
@@ -466,21 +453,21 @@ public interface ProgramVisitor<T> extends ParseTreeVisitor<T> {
 	T visitAo_minus(ProgramParser.Ao_minusContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ao_mult}
-	 * labeled alternative in {@link ProgramParser#arith_op}.
+	 * labeled alternative in {@link ProgramParser#mult_op}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitAo_mult(ProgramParser.Ao_multContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ao_div}
-	 * labeled alternative in {@link ProgramParser#arith_op}.
+	 * labeled alternative in {@link ProgramParser#mult_op}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitAo_div(ProgramParser.Ao_divContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ao_mod}
-	 * labeled alternative in {@link ProgramParser#arith_op}.
+	 * labeled alternative in {@link ProgramParser#mult_op}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -529,14 +516,14 @@ public interface ProgramVisitor<T> extends ParseTreeVisitor<T> {
 	T visitEqop_diff(ProgramParser.Eqop_diffContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code condop_or}
-	 * labeled alternative in {@link ProgramParser#cond_op}.
+	 * labeled alternative in {@link ProgramParser#cond_op_or}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitCondop_or(ProgramParser.Condop_orContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code condop_and}
-	 * labeled alternative in {@link ProgramParser#cond_op}.
+	 * labeled alternative in {@link ProgramParser#cond_op_and}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */

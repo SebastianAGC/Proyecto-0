@@ -110,7 +110,8 @@ public class Controller implements Initializable {
                 //treeView.setRoot(generatingRoot(raiz));
                 treeView.setRoot(generatingRoot(raiz, tree));
                 errorsText.setText(raiz);
-                intCodeText.setText(eval.intCode);
+                String code = eval.intCode;
+                intCodeText.setText(code);
                 tabPane.getSelectionModel().select(2);
 
             }else{

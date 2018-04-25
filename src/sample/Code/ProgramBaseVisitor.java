@@ -1,4 +1,5 @@
-package sample.Code;// Generated from Program.g4 by ANTLR 4.7.1
+// Generated from Program.g4 by ANTLR 4.7.1
+package sample.Code;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 
 /**
@@ -282,13 +283,6 @@ public class ProgramBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitLocationA2(ProgramParser.LocationA2Context ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
 	@Override public T visitLocMethod(ProgramParser.LocMethodContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
@@ -409,13 +403,6 @@ public class ProgramBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
 	@Override public T visitValue_location(ProgramParser.Value_locationContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitValue_locationArray2(ProgramParser.Value_locationArray2Context ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

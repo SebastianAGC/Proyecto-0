@@ -1,4 +1,5 @@
 // Generated from Program.g4 by ANTLR 4.7.1
+package sample.Grammar;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 import sample.Code.ProgramParser;
 
@@ -464,18 +465,6 @@ public interface ProgramListener extends ParseTreeListener {
 	 */
 	void exitLocationA(ProgramParser.LocationAContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code locationA2}
-	 * labeled alternative in {@link ProgramParser#locationArray2}.
-	 * @param ctx the parse tree
-	 */
-	void enterLocationA2(ProgramParser.LocationA2Context ctx);
-	/**
-	 * Exit a parse tree produced by the {@code locationA2}
-	 * labeled alternative in {@link ProgramParser#locationArray2}.
-	 * @param ctx the parse tree
-	 */
-	void exitLocationA2(ProgramParser.LocationA2Context ctx);
-	/**
 	 * Enter a parse tree produced by the {@code locMethod}
 	 * labeled alternative in {@link ProgramParser#locationMethod}.
 	 * @param ctx the parse tree
@@ -692,18 +681,6 @@ public interface ProgramListener extends ParseTreeListener {
 	 */
 	void exitValue_location(ProgramParser.Value_locationContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code value_locationArray2}
-	 * labeled alternative in {@link ProgramParser#value}.
-	 * @param ctx the parse tree
-	 */
-	void enterValue_locationArray2(ProgramParser.Value_locationArray2Context ctx);
-	/**
-	 * Exit a parse tree produced by the {@code value_locationArray2}
-	 * labeled alternative in {@link ProgramParser#value}.
-	 * @param ctx the parse tree
-	 */
-	void exitValue_locationArray2(ProgramParser.Value_locationArray2Context ctx);
-	/**
 	 * Enter a parse tree produced by the {@code value_methodCall}
 	 * labeled alternative in {@link ProgramParser#value}.
 	 * @param ctx the parse tree
@@ -789,37 +766,37 @@ public interface ProgramListener extends ParseTreeListener {
 	void exitAo_minus(ProgramParser.Ao_minusContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ao_mult}
-	 * labeled alternative in {@link ProgramParser#arith_op}.
+	 * labeled alternative in {@link ProgramParser#mult_op}.
 	 * @param ctx the parse tree
 	 */
 	void enterAo_mult(ProgramParser.Ao_multContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code ao_mult}
-	 * labeled alternative in {@link ProgramParser#arith_op}.
+	 * labeled alternative in {@link ProgramParser#mult_op}.
 	 * @param ctx the parse tree
 	 */
 	void exitAo_mult(ProgramParser.Ao_multContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ao_div}
-	 * labeled alternative in {@link ProgramParser#arith_op}.
+	 * labeled alternative in {@link ProgramParser#mult_op}.
 	 * @param ctx the parse tree
 	 */
 	void enterAo_div(ProgramParser.Ao_divContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code ao_div}
-	 * labeled alternative in {@link ProgramParser#arith_op}.
+	 * labeled alternative in {@link ProgramParser#mult_op}.
 	 * @param ctx the parse tree
 	 */
 	void exitAo_div(ProgramParser.Ao_divContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ao_mod}
-	 * labeled alternative in {@link ProgramParser#arith_op}.
+	 * labeled alternative in {@link ProgramParser#mult_op}.
 	 * @param ctx the parse tree
 	 */
 	void enterAo_mod(ProgramParser.Ao_modContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code ao_mod}
-	 * labeled alternative in {@link ProgramParser#arith_op}.
+	 * labeled alternative in {@link ProgramParser#mult_op}.
 	 * @param ctx the parse tree
 	 */
 	void exitAo_mod(ProgramParser.Ao_modContext ctx);
@@ -897,25 +874,25 @@ public interface ProgramListener extends ParseTreeListener {
 	void exitEqop_diff(ProgramParser.Eqop_diffContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code condop_or}
-	 * labeled alternative in {@link ProgramParser#cond_op}.
+	 * labeled alternative in {@link ProgramParser#cond_op_or}.
 	 * @param ctx the parse tree
 	 */
 	void enterCondop_or(ProgramParser.Condop_orContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code condop_or}
-	 * labeled alternative in {@link ProgramParser#cond_op}.
+	 * labeled alternative in {@link ProgramParser#cond_op_or}.
 	 * @param ctx the parse tree
 	 */
 	void exitCondop_or(ProgramParser.Condop_orContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code condop_and}
-	 * labeled alternative in {@link ProgramParser#cond_op}.
+	 * labeled alternative in {@link ProgramParser#cond_op_and}.
 	 * @param ctx the parse tree
 	 */
 	void enterCondop_and(ProgramParser.Condop_andContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code condop_and}
-	 * labeled alternative in {@link ProgramParser#cond_op}.
+	 * labeled alternative in {@link ProgramParser#cond_op_and}.
 	 * @param ctx the parse tree
 	 */
 	void exitCondop_and(ProgramParser.Condop_andContext ctx);
