@@ -11,6 +11,8 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     String error = "";
     int memory = 0;
     int offset;
+    int ifCounts;
+    int whileCounts;
     int contTemps = 0;
     String intCode = "";
     //String elTemporal = "";
@@ -122,7 +124,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     @Override
     public String visitFinblck(ProgramParser.FinblckContext ctx) {
         stack.pop();
-        scopeName.pop();
         return visitChildren(ctx);
     }
 
@@ -328,7 +329,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     public String visitBool_true(ProgramParser.Bool_trueContext ctx) {
         //Retornando tipo booleano
         String tipo = "boolean";
-        String elTemporal = tipo;
+        String elTemporal = "true";
         return tipo + ", " + elTemporal;
     }
 
@@ -336,7 +337,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     public String visitBool_false(ProgramParser.Bool_falseContext ctx) {
         //Retornando tipo boolean
         String tipo = "boolean";
-        String elTemporal = tipo;
+        String elTemporal = "false";
         return tipo + ", " + elTemporal;
     }
 
@@ -397,11 +398,23 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         String andExprType = visit(ctx.andExpr());
         //String andExprTemp = elTemporal;
 
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts = splitString(andExprType);
+
+
         String eqrExprType = visit(ctx.eqExpr());
         //String eqrExprTemp = elTemporal;
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts1 = splitString(eqrExprType);
+
+
 
         String errorMessage ="";
-        if(!andExprType.equals("boolean")){
+        if(!parts[0].equals("boolean")){
             errorMessage="Error en la linea: " + ctx.getStart().getLine() +
                     ", \"" + ctx.andExpr().getText() + "\" debe de ser del tipo boolean.\n";
             if(!error.contains(errorMessage)){
@@ -411,7 +424,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             cont++;
         }
 
-        if(!eqrExprType.equals("boolean")){
+        if(!parts1[0].equals("boolean")){
             errorMessage="Error en la linea: " + ctx.getStart().getLine() +
                     ", \"" + ctx.eqExpr().getText() + "\" debe de ser del tipo boolean.\n";
             if(!error.contains(errorMessage)){
@@ -422,7 +435,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         }
         if(cont==2){
             contTemps++;
-            intCode+= "t" + contTemps + " = " + andExprType + ctx.cond_op_and().getText() + eqrExprType + "\n";
+            intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.cond_op_and().getText() + parts1[parts1.length-1] + "\n";
             elTemporal = "t"+contTemps;
         }
 
@@ -450,11 +463,22 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         String tipo = null;
         String eqExprType = visit(ctx.eqExpr());
         //String eqExprTemp = elTemporal;
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts = splitString(eqExprType);
+
+
 
         String relationExprType = visit(ctx.relationExpr());
         //String relationExprTemp = elTemporal;
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts1 = splitString(relationExprType);
 
-        if(!eqExprType.equals(relationExprType)){
+
+        if(!parts[0].equals(parts1[0])){
             String errorMessage="Error en la linea: " + ctx.getStart().getLine() +
                     ", Los tipos no son compatibles.\n";
             if(!error.contains(errorMessage)){
@@ -462,7 +486,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             }
         }else{
             contTemps++;
-            intCode+= "t" + contTemps + " = " + eqExprType + ctx.eq_op().getText() + relationExprType + "\n";
+            intCode+= "t" + contTemps + " = " + parts[parts.length-1]+ ctx.eq_op().getText() + parts1[parts1.length-1] + "\n";
             elTemporal = "t"+contTemps;
             visitChildren(ctx);
             tipo = "boolean";
@@ -480,12 +504,20 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         String tipo = null;
         String relationExprType = visit(ctx.relationExpr());
         //String relationExprTemp = elTemporal;
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts = splitString(relationExprType);
 
         String addExprType = visit(ctx.addExpr());
         //String addExprTemp = elTemporal;
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts1 = splitString(addExprType);
 
         String errorMessage ="";
-        if(!relationExprType.equals("int")){
+        if(!parts[0].equals("int")){
             errorMessage="Error en la linea: " + ctx.getStart().getLine() +
                     ", \"" + ctx.relationExpr().getText() + "\" debe de ser del tipo int.\n";
             if(!error.contains(errorMessage)){
@@ -495,7 +527,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             correctos++;
         }
 
-        if(!addExprType.equals("int")){
+        if(!parts1[0].equals("int")){
             errorMessage="Error en la linea: " + ctx.getStart().getLine() +
                     ", \"" + ctx.addExpr().getText() + "\" debe de ser del tipo int.\n";
             if(!error.contains(errorMessage)){
@@ -506,7 +538,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         }
         if(correctos==2){
             contTemps++;
-            intCode+= "t" + contTemps + " = " + relationExprType + ctx.rel_op().getText() + addExprType + "\n";
+            intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.rel_op().getText() + parts1[parts1.length-1]+ "\n";
             elTemporal = "t"+contTemps;
             visitChildren(ctx);
             tipo = "boolean";
@@ -526,17 +558,12 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         //Parte 1 = temporal
         String[] parts = splitString(addExprType);
 
-
-
-
         String multExprType = visit(ctx.multExpr());
         //String multExprTemp = elTemporal;
         //dividiendo expressionType ej. int, 5
         //Parte 0 = tipo
         //Parte 1 = temporal
         String[] parts1 = splitString(multExprType);
-
-
 
         String errorMessage ="";
         if(!parts[0].equals("int")){
@@ -620,34 +647,51 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
 
     @Override
     public String visitStmt_if(ProgramParser.Stmt_ifContext ctx){
+        ifCounts++;
+        intCode+="label_if_"+ifCounts+":\n";
         String expressionType = visit(ctx.expression());
-        if(!expressionType.equals("boolean")){
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts = splitString(expressionType);
+
+        if(!parts[0].equals("boolean")){
             String errorMessage="Error en la linea: " + ctx.getStart().getLine() +
                     ", \"" + ctx.expression().getText() + "\" debe de ser del tipo boolean.\n";
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
         }
-            //Creando la nueva tabla de simbolos para el metodo
-            HashSet<Simbolo> newHashSet = new HashSet<>();
-            stack.push(newHashSet);
+        //Creando la nueva tabla de simbolos para el metodo
+        HashSet<Simbolo> newHashSet = new HashSet<>();
+        stack.push(newHashSet);
+        intCode+="label_if_"+ifCounts+"_true:\n";
         return visitChildren(ctx);
     }
 
     @Override
     public String visitStmt_while(ProgramParser.Stmt_whileContext ctx){
+        whileCounts++;
+        intCode+="label_while_"+whileCounts+":\n";
+
         String expressionType = visit(ctx.expression());
-        if(!expressionType.equals("boolean")){
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts = splitString(expressionType);
+
+        if(!parts[0].equals("boolean")){
             String errorMessage="Error en la linea: " + ctx.getStart().getLine() +
                     ", \"" + ctx.expression().getText() + "\" debe de ser del tipo boolean.\n";
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
         }
-            //Creando la nueva tabla de simbolos para el metodo
-            HashSet<Simbolo> newHashSet = new HashSet<>();
-            stack.push(newHashSet);
 
+        //Creando la nueva tabla de simbolos para el metodo
+        HashSet<Simbolo> newHashSet = new HashSet<>();
+        stack.push(newHashSet);
+        intCode+="label_while_"+whileCounts+"_content:\n";
         return visitChildren(ctx);
     }
 
@@ -700,7 +744,12 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     @Override
     public String visitValue_methodCall(ProgramParser.Value_methodCallContext ctx){
         String methodType = visit(ctx.methodCall());
-        if(methodType.equals("void")){
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts = splitString(methodType);
+
+        if(parts[0].equals("void")){
             String errorMessage = "Error en la linea: " + ctx.getStart().getLine()+
                     ", El tipo de retorno del metodo debe ser distinto de void.\n";
             if(!error.contains(errorMessage)){
@@ -713,22 +762,18 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     @Override
     public String visitStmtElse(ProgramParser.StmtElseContext ctx){
         //Creando la nueva tabla de simbolos para el metodo
+        intCode+="label_if_"+ifCounts+"_false:\n";
         HashSet<Simbolo> newHashSet = new HashSet<>();
         stack.push(newHashSet);
         return visitChildren(ctx);
     }
 
-    @Override public String visitValue_location(ProgramParser.Value_locationContext ctx) {
+    @Override
+    public String visitValue_location(ProgramParser.Value_locationContext ctx) {
         String loc = ctx.location().getText();
         Simbolo s = searchSymbol(loc, stack);
         String elTemporal = "S[" +s.getOffset()+"]";
-        /*
-        HashSet<Simbolo> h = stack.peek();
-        for (Simbolo s:h) {
-            if(s.getNombre().equals(loc)){
-                elTemporal = "S[" +s.getOffset()+"]";
-            }
-        }*/
+
         return visitChildren(ctx) + ", " +elTemporal;
     }
 
@@ -759,4 +804,3 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     }
 
 }
-
