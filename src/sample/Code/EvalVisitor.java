@@ -10,13 +10,11 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     HashSet<Simbolo> globalStack = new HashSet<>();
     String methodT="";
     String error = "";
-    int memory = 0;
     int offset;
     int ifCounts;
     int whileCounts;
     int contTemps = 1;
     String intCode = "";
-    //String elTemporal = "";
     Stack<String> scopeName = new Stack<>();
 
 
@@ -122,7 +120,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
 
         HashSet<Simbolo>  hashSet = stack.pop();
         Simbolo s = new Simbolo(id, type, 0, offset- 4*cI + 4*cC + cB, firm);
-        //offset = offset - 4*cI + 4*cC + cB;
         if(hashSet.contains(s)){
             error += "Error en la linea: "+ ctx.getStart().getLine() +". El metodo \"" + id + "\" ya ha sido creado.\n";
         }else{
