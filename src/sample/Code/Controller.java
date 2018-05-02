@@ -104,7 +104,7 @@ public class Controller implements Initializable {
 
             if(eval.getError().equals("")){
                 //show AST in console
-                System.out.println(tree.toStringTree(parser));
+                //System.out.println(tree.toStringTree(parser));
                 //Show in GUI
                 String raiz = tree.toStringTree(parser);
                 //treeView.setRoot(generatingRoot(raiz));

@@ -124,7 +124,7 @@ expression
 
 andExpr
 	: 	eqExpr				            #and_eqExpr
-	| 	andExpr cond_op_and eqExpr 	        #and_condOp
+	| 	andExpr cond_op_and eqExpr 	    #and_condOp
 	;
 
 eqExpr

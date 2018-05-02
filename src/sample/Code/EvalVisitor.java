@@ -1,5 +1,6 @@
 package sample.Code;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Stack;
 
@@ -79,46 +80,66 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     @Override
 
     public String visitMethodDecl(ProgramParser.MethodDeclContext ctx){
+        ArrayList<Simbolo> simbolsArray = new ArrayList<>();
+        int cI= 0;
+        int cC = 0;
+        int cB = 0;
         String type = ctx.methodType().getText();
         String id = ctx.ID().getText();
         String firm = "";
         int cantParametros = ctx.parameter().size();
         if(cantParametros!=0){
             for(int i=0;i<cantParametros;i++){
+
                 String parametro = ctx.parameter().get(i).getText();
                 String pType = "";
                 String pId = "";
                 if(parametro.contains("int")){
+                    cI++;
                     pType = parametro.substring(0,3);
                     pId = parametro.substring(3);
                 }else if(parametro.contains("char")){
+                    cC++;
                     pType = parametro.substring(0,4);
                     pId = parametro.substring(4);
                 }else{
+                    cB++;
                     pType = parametro.substring(0,7);
                     pId = parametro.substring(7);
                 }
                 firm+=pType+" "+pId +", ";
+                Simbolo s =  new Simbolo(pId, pType, 0, offset, null);
+                if(pType.equals("int")){
+                    offset += 4;
+                }else if(s.getTipo().equals("char")){
+                    offset += 4;
+                }else if(s.getTipo().equals("boolean")){
+                    offset += 1;
+                }
+                simbolsArray.add(s);
             }
-            System.out.println(firm);
         }
         scopeName.push(id);
 
         HashSet<Simbolo>  hashSet = stack.pop();
         Simbolo s = new Simbolo(id, type, 0, offset, firm);
+        offset += offset - 4*cI + 4*cC + cB;
         if(hashSet.contains(s)){
             error += "Error en la linea: "+ ctx.getStart().getLine() +". El metodo \"" + id + "\" ya ha sido creado.\n";
         }else{
             hashSet.add(s);
             methodT = type;
-            intCode += s.nombre + ":\n";
+            intCode +="BEGIN " +s.nombre + ":\n";
         }
         stack.push(hashSet);
 
         //Creando la nueva tabla de simbolos para el metodo
         HashSet<Simbolo> newHashSet = new HashSet<>();
         stack.push(newHashSet);
-        return visitChildren(ctx);
+        stack.peek().addAll(simbolsArray);
+        visit(ctx.block());
+        intCode +="END "+ s.nombre + "\n";
+        return "";
     }
 
     @Override
@@ -157,33 +178,46 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     }
 
     @Override
+    public String visitLocationMember_ID(ProgramParser.LocationMember_IDContext ctx) {
+        ctx.ID();
+        return visitChildren(ctx);
+    }
+
+    @Override
     public String visitLocationA(ProgramParser.LocationAContext ctx) {
         String variable = ctx.ID().getText();
         String locationArrayType = "";
         Simbolo theSymbol = null;
 
-        for (HashSet<Simbolo> h:stack) {
-            //HashSet<Simbolo> hashSet = stack.peek();
-            Simbolo s = new Simbolo(variable,null,0, offset, null);
-            if(!h.contains(s) ){
-                String errorMessage ="Error en la linea: "+ ctx.getStart().getLine() +". La variable \"" + variable
-                        +"\" no ha sido creada aun.\n";
-                if(!error.contains(errorMessage)){
-                    error +=errorMessage;
-                }
-            }else{
-                for (Simbolo symbol:h) {
-                    if(symbol.equals(s)){
-                        theSymbol = symbol;
-                    }
-                }
+        if(searchSymbol(variable, stack) == null){
+            String errorMessage ="Error en la linea: "+ ctx.getStart().getLine() +". La variable \"" + variable
+                    +"\" no ha sido creada aun.\n";
+            if(!error.contains(errorMessage)){
+                error +=errorMessage;
             }
-        }
-        if(theSymbol!=null){
-            locationArrayType = theSymbol.getTipo();
-            visitChildren(ctx);
         }else{
-            visitChildren(ctx);
+            theSymbol = searchSymbol(variable, stack);
+        }
+        String expressionType = visit(ctx.expression());
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts = splitString(expressionType);
+
+        if(!parts[0].equals("int")){
+            //error
+            String errorMessage ="Error en la linea: "+ ctx.getStart().getLine() +". La expresion del indice del array debe ser del tipo int. Se recibio" + parts[0] +".\n";
+            if(!error.contains(errorMessage)){
+                error +=errorMessage;
+            }
+        }else{
+
+            if(theSymbol!=null){
+                locationArrayType = theSymbol.getTipo();
+                visitChildren(ctx);
+            }else{
+                visitChildren(ctx);
+            }
         }
         return locationArrayType;
     }
@@ -191,7 +225,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     @Override
     //Metodo para verificar cuando un arreglo esta siendo declarado
     public String visitVarDecl_IDarray(ProgramParser.VarDecl_IDarrayContext ctx) {
-        //JOptionPane.showMessageDialog(null,"Entre aca");
+
         String number = ctx.NUM().getText();
         int n = Integer.parseInt(number);
 
@@ -203,14 +237,23 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                 error+="Error en la linea: " + ctx.getStart().getLine() +". Number en la declaracion del array \""+ctx.ID().getText()+"\" debe ser mayor a 0.\n";
             }else{
                 stack.peek().add(s);
+                if(s.getTipo().equals("int")){
+                    offset += 4*n;
+                }else if(s.getTipo().equals("char")){
+                    offset += 4*n;
+                }else if(s.getTipo().equals("boolean")){
+                    offset += 1*n;
+                }
             }
         }
+
         return visitChildren(ctx);
     }
 
     @Override
     //Metodo para verificar cuando un metodo esta siendo declarado
     public String visitCallingMethod(ProgramParser.CallingMethodContext ctx) {
+        intCode+="CALL " + ctx.ID().getText() + "\n";
         //Variable para retornar el tipo del metodo
         String methodType = "";
         //Obteniendo el ID del metodo
@@ -238,16 +281,19 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                         //hacer aca lo que revisa las literales
                         int x =i+1;
                         String errorMessage = "";
+                        String litType = visit(ctx.arg().get(i));
+                        String[] litTypeParts = litType.split(",");
+
                         if(paramType.equals("int")){
-                            if(!visit(ctx.arg().get(i)).equals("int")){
+                            if(!litTypeParts[0].equals("int")){
                                 errorMessage="Error en la linea: "+ ctx.getStart().getLine() +". Los tipos en el parametro #" + x +" no coinciden. Se esperaba "+paramType+".\n";
                             }
                         }else if(paramType.equals("boolean")){
-                            if(!visit(ctx.arg().get(i)).equals("boolean")){
+                            if(!litTypeParts[0].equals("boolean")){
                                 errorMessage="Error en la linea: "+ ctx.getStart().getLine() +". Los tipos en el parametro #" + x +" no coinciden. Se esperaba "+paramType+".\n";
                             }
                         }else if(paramType.equals("char")){
-                             if(!visit(ctx.arg().get(i)).equals("char")){
+                             if(!litTypeParts[0].equals("char")){
                                  errorMessage="Error en la linea: "+ ctx.getStart().getLine() +". Los tipos en el parametro #" + x +" no coinciden. Se esperaba "+paramType+".\n";
                              }
                         }
@@ -280,7 +326,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         return argsType;
     }
 
-    //***********************************LOCATION************************************
+    //***********************************LOCATION AND LOCATION ARRAY************************************
     @Override
     public  String visitStmt_location(ProgramParser.Stmt_locationContext ctx) {
         String expressionType = visit(ctx.expression());
@@ -300,13 +346,57 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
               error+=errorMessage;
             }
         }else{
-            HashSet<Simbolo> table = stack.peek();
             Simbolo s = searchSymbol(ctx.location().getText(), stack);
             intCode+= "S[" + s.getOffset() + "] = " + parts[parts.length-1] + "\n";
 
         }
         //se cambio return
         return "";
+    }
+
+    @Override
+    public String visitStmt_locationArray(ProgramParser.Stmt_locationArrayContext ctx) {
+        String expressionType = visit(ctx.expression());
+        String locationType = visit(ctx.locationArray());
+
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts = splitString(expressionType);
+
+        String errorMessage = "Error en la linea: " +ctx.getStart().getLine()+", Los tipos en " +
+                "la asignacion no coinciden. No se puede asignar \"" + parts[0] +"\" a \"" +
+                locationType + "\"\n";
+
+
+        if(!parts[0].equals(locationType)){
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }else{
+            String t = ctx.locationArray().getText();
+            String arrayID = t.substring(0, t.length()-3);
+            String arrayN = t.substring(t.length()-2, t.length()-1);
+            Simbolo s = searchSymbol(arrayID, stack);
+            if(Integer.parseInt(arrayN)>= s.size){
+                errorMessage = "Error en la linea: " +ctx.getStart().getLine()+", Array \""+ arrayID+"\", index out of bounds.\n";
+                if(!error.contains(errorMessage)){
+                    error+=errorMessage;
+                }
+            }else{
+                int offsetStep = 0;
+                if(s.getTipo().equals("int")){
+                    offsetStep = 4;
+                }else if(s.getTipo().equals("char")){
+                    offsetStep = 4;
+                }else if(s.getTipo().equals("boolean")){
+                    offsetStep = 1;
+                }
+                offsetStep = s.getOffset() + offsetStep * Integer.parseInt(arrayN);
+                intCode+= "S[" + offsetStep + "] = " + parts[parts.length-1] + "\n";
+            }
+        }
+        return visitChildren(ctx);
     }
 
     @Override
@@ -387,7 +477,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             elTemporal = "t"+contTemps;
         }
 
-        return visitChildren(ctx) + ",  " + elTemporal;
+        return parts1[0] + ",  " + elTemporal;
     }
 
     @Override
@@ -439,7 +529,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             elTemporal = "t"+contTemps;
         }
 
-        return visitChildren(ctx) + ", " + elTemporal;
+        return parts[0] + ", " + elTemporal;
     }
 
     @Override
@@ -459,7 +549,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     @Override
     public String visitEqExpr_eqOp(ProgramParser.EqExpr_eqOpContext ctx){
         String elTemporal = "";
-        int cont = 0;
         String tipo = null;
         String eqExprType = visit(ctx.eqExpr());
         //String eqExprTemp = elTemporal;
@@ -467,8 +556,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         //Parte 0 = tipo
         //Parte 1 = temporal
         String[] parts = splitString(eqExprType);
-
-
 
         String relationExprType = visit(ctx.relationExpr());
         //String relationExprTemp = elTemporal;
@@ -488,7 +575,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             contTemps++;
             intCode+= "t" + contTemps + " = " + parts[parts.length-1]+ ctx.eq_op().getText() + parts1[parts1.length-1] + "\n";
             elTemporal = "t"+contTemps;
-            visitChildren(ctx);
+            //visitChildren(ctx);
             tipo = "boolean";
         }
         return tipo + ", "+elTemporal;
@@ -540,7 +627,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             contTemps++;
             intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.rel_op().getText() + parts1[parts1.length-1]+ "\n";
             elTemporal = "t"+contTemps;
-            visitChildren(ctx);
+            //visitChildren(ctx);
             tipo = "boolean";
         }
         return tipo + ", " + elTemporal;
@@ -591,7 +678,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             elTemporal = "t"+contTemps;
         }
 
-        return visitChildren(ctx) + ", " + elTemporal;
+        return parts[0] + ", " + elTemporal;
     }
 
     @Override
@@ -640,7 +727,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             elTemporal = "t"+contTemps;
         }
 
-        return visitChildren(ctx) + ", " + elTemporal;
+        return parts[0] + ", " + elTemporal;
     }
 
     //*******************************if************************************
@@ -666,7 +753,9 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         HashSet<Simbolo> newHashSet = new HashSet<>();
         stack.push(newHashSet);
         intCode+="label_if_"+ifCounts+"_true:\n";
-        return visitChildren(ctx);
+        visit(ctx.block());
+        visit(ctx.statementElse());
+        return "";
     }
 
     @Override
@@ -692,7 +781,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         HashSet<Simbolo> newHashSet = new HashSet<>();
         stack.push(newHashSet);
         intCode+="label_while_"+whileCounts+"_content:\n";
-        return visitChildren(ctx);
+        return visit(ctx.block());
     }
 
     /*
@@ -722,6 +811,11 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     public String visitStmt_return(ProgramParser.Stmt_returnContext ctx) {
         String methodType = methodT;
         String returnType = visit(ctx.expression());
+        //dividiendo expressionType ej. int, 5
+        //Parte 0 = tipo
+        //Parte 1 = temporal
+        String[] parts = splitString(returnType);
+
         String errorMessage = "";
         if(methodType.equals("void")){
             errorMessage = "Error en la linea: "+ctx.getStart().getLine()+
@@ -729,14 +823,14 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
-        }else if(!methodType.equals(returnType)){
+        }else if(!methodType.equals(parts[0])){
             errorMessage = "Error en la linea: "+ctx.getStart().getLine()+
                     ", El tipo de \"return\" y del metodo debe ser el mismo. \n";
             if(!error.contains(errorMessage)){
                 error+=errorMessage;
             }
         }
-
+        System.out.println(visitChildren(ctx));
         return visitChildren(ctx);
     }
 
@@ -772,8 +866,15 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     public String visitValue_location(ProgramParser.Value_locationContext ctx) {
         String loc = ctx.location().getText();
         Simbolo s = searchSymbol(loc, stack);
-        String elTemporal = "S[" +s.getOffset()+"]";
-
+        String elTemporal = null;
+        if(s == null){
+            String errorMessage = "Error en la linea: "+ ctx.getStart().getLine() +". La variable \"" + loc +"\" no ha sido creada aun.\n";
+            if(!error.contains(errorMessage)){
+                error+=errorMessage;
+            }
+        }else{
+            elTemporal = "S[" +s.getOffset()+"]";
+        }
         return visitChildren(ctx) + ", " +elTemporal;
     }
 
