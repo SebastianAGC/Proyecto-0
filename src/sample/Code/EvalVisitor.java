@@ -14,7 +14,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     int offset;
     int ifCounts;
     int whileCounts;
-    int contTemps = 0;
+    int contTemps = 1;
     String intCode = "";
     //String elTemporal = "";
     Stack<String> scopeName = new Stack<>();
@@ -90,7 +90,6 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         int cantParametros = ctx.parameter().size();
         if(cantParametros!=0){
             for(int i=0;i<cantParametros;i++){
-
                 String parametro = ctx.parameter().get(i).getText();
                 String pType = "";
                 String pId = "";
@@ -122,8 +121,8 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         scopeName.push(id);
 
         HashSet<Simbolo>  hashSet = stack.pop();
-        Simbolo s = new Simbolo(id, type, 0, offset, firm);
-        offset += offset - 4*cI + 4*cC + cB;
+        Simbolo s = new Simbolo(id, type, 0, offset- 4*cI + 4*cC + cB, firm);
+        //offset = offset - 4*cI + 4*cC + cB;
         if(hashSet.contains(s)){
             error += "Error en la linea: "+ ctx.getStart().getLine() +". El metodo \"" + id + "\" ya ha sido creado.\n";
         }else{
@@ -145,7 +144,8 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     @Override
     public String visitFinblck(ProgramParser.FinblckContext ctx) {
         stack.pop();
-        return visitChildren(ctx);
+        contTemps=1;
+        return "";
     }
 
     @Override
@@ -177,11 +177,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         return locationType;
     }
 
-    @Override
-    public String visitLocationMember_ID(ProgramParser.LocationMember_IDContext ctx) {
-        ctx.ID();
-        return visitChildren(ctx);
-    }
+
 
     @Override
     public String visitLocationA(ProgramParser.LocationAContext ctx) {
@@ -253,7 +249,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     @Override
     //Metodo para verificar cuando un metodo esta siendo declarado
     public String visitCallingMethod(ProgramParser.CallingMethodContext ctx) {
-        intCode+="CALL " + ctx.ID().getText() + "\n";
+        String codeParams = "";
         //Variable para retornar el tipo del metodo
         String methodType = "";
         //Obteniendo el ID del metodo
@@ -287,14 +283,26 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                         if(paramType.equals("int")){
                             if(!litTypeParts[0].equals("int")){
                                 errorMessage="Error en la linea: "+ ctx.getStart().getLine() +". Los tipos en el parametro #" + x +" no coinciden. Se esperaba "+paramType+".\n";
+                            }else{
+                                intCode+= "t"+ contTemps+" = "+ litTypeParts[1]+"\n";
+                                codeParams+= "PARAMS t" + contTemps + ", ";
+                                contTemps++;
                             }
                         }else if(paramType.equals("boolean")){
                             if(!litTypeParts[0].equals("boolean")){
                                 errorMessage="Error en la linea: "+ ctx.getStart().getLine() +". Los tipos en el parametro #" + x +" no coinciden. Se esperaba "+paramType+".\n";
+                            }else{
+                                intCode+= "t"+ contTemps+" = "+ litTypeParts[1]+"\n";
+                                codeParams+= "PARAMS t" + contTemps + ", ";
+                                contTemps++;
                             }
                         }else if(paramType.equals("char")){
                              if(!litTypeParts[0].equals("char")){
                                  errorMessage="Error en la linea: "+ ctx.getStart().getLine() +". Los tipos en el parametro #" + x +" no coinciden. Se esperaba "+paramType+".\n";
+                             }else{
+                                 intCode+= "t"+ contTemps+" = "+ litTypeParts[1]+"\n";
+                                 codeParams+= "PARAMS t" + contTemps + ", ";
+                                 contTemps++;
                              }
                         }
                         //Comprueba que el error no haya sido agregado anteriormente
@@ -305,15 +313,24 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                         if(!elSim.getTipo().equals(paramType)){
                             int x = i+1;
                             error+="Error en la linea: "+ ctx.getStart().getLine() +". Los tipos en el parametro #" + x +" no coinciden. Se recibio " +elSim.getTipo()+", se esperaba "+paramType+".\n";
+                        }else{
+                            intCode+= "t"+ contTemps+" = S["+ elSim.getOffset()+"]\n";
+                            codeParams+= "PARAMS t" + contTemps + ", ";
+                            contTemps++;
                         }
                     }
                 }
+                //String[] codeParamsParts = codeParams.split(", ");
+                //for (String sub:codeParamsParts) {
+                    //intCode+=sub+"\n";
+                //}
+                intCode+="GOTO " + ctx.ID().getText() + " "+codeParams+"\n";
                 methodType=t.getTipo();
 
-                visitChildren(ctx);
+                //visitChildren(ctx);
             }else{
                 error+="Error en la linea: "+ ctx.getStart().getLine() +". Se recibieron " + cantParam+" argumentos, se esperaban "+ paramSize+", en el metodo "+methodId+".\n";
-                visitChildren(ctx);
+                //visitChildren(ctx);
             }
         }
         return methodType;
@@ -322,7 +339,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
     @Override
     public String visitArgs(ProgramParser.ArgsContext ctx){
         String argsType = visit(ctx.expression());
-        visitChildren(ctx);
+        //visitChildren(ctx);
         return argsType;
     }
 
@@ -472,9 +489,9 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             cont++;
         }
         if(cont==2){
-            contTemps++;
             intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.cond_op_or().getText() + parts1[parts1.length-1] + "\n";
             elTemporal = "t"+contTemps;
+            contTemps++;
         }
 
         return parts1[0] + ",  " + elTemporal;
@@ -524,9 +541,10 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             cont++;
         }
         if(cont==2){
-            contTemps++;
+
             intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.cond_op_and().getText() + parts1[parts1.length-1] + "\n";
             elTemporal = "t"+contTemps;
+            contTemps++;
         }
 
         return parts[0] + ", " + elTemporal;
@@ -572,9 +590,10 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                 error+=errorMessage;
             }
         }else{
-            contTemps++;
+
             intCode+= "t" + contTemps + " = " + parts[parts.length-1]+ ctx.eq_op().getText() + parts1[parts1.length-1] + "\n";
             elTemporal = "t"+contTemps;
+            contTemps++;
             //visitChildren(ctx);
             tipo = "boolean";
         }
@@ -624,9 +643,10 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
             correctos++;
         }
         if(correctos==2){
-            contTemps++;
+
             intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.rel_op().getText() + parts1[parts1.length-1]+ "\n";
             elTemporal = "t"+contTemps;
+            contTemps++;
             //visitChildren(ctx);
             tipo = "boolean";
         }
@@ -673,9 +693,10 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         }
 
         if(cont==2){
-            contTemps++;
+
             intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.arith_op().getText() + parts1[parts1.length-1] + "\n";
             elTemporal = "t"+contTemps;
+            contTemps++;
         }
 
         return parts[0] + ", " + elTemporal;
@@ -722,9 +743,10 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         }
 
         if(cont==2){
-            contTemps++;
+
             intCode+= "t" + contTemps + " = " + parts[parts.length-1] + ctx.mult_op().getText() + parts1[parts1.length-1] + "\n";
             elTemporal = "t"+contTemps;
+            contTemps++;
         }
 
         return parts[0] + ", " + elTemporal;
@@ -780,8 +802,12 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
         //Creando la nueva tabla de simbolos para el metodo
         HashSet<Simbolo> newHashSet = new HashSet<>();
         stack.push(newHashSet);
+        intCode+="if t" + contTemps + " == false GOTO END while_" + whileCounts+ "\n";
         intCode+="label_while_"+whileCounts+"_content:\n";
-        return visit(ctx.block());
+        visit(ctx.block());
+        intCode+="GOTO label_while_"+whileCounts+"\n";
+        intCode+="END while_" + whileCounts +"\n";
+        return "";
     }
 
     /*
@@ -830,7 +856,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                 error+=errorMessage;
             }
         }
-        System.out.println(visitChildren(ctx));
+        intCode+="RETURN "+ parts[1] +"\n";
         return visitChildren(ctx);
     }
 
@@ -850,7 +876,7 @@ public class EvalVisitor extends ProgramBaseVisitor<String> {
                 error+=errorMessage;
             }
         }
-        return visitChildren(ctx);
+        return methodType;
     }
 
     @Override
